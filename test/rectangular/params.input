@@ -1,0 +1,18 @@
+[Problem]
+Name = channel
+PressureGradient = 1e2
+Viscosity = 1e-3
+
+[Grid]
+File = channel.msh
+
+[Component]
+LiquidDensity = 1.0
+LiquidDynamicViscosity = 1.0
+
+[SpatialParams]
+Permeability = 1.0
+Porosity = 1.0
+
+[LinearSolver]
+MaxIterations = 1000
