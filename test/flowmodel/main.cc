@@ -158,7 +158,7 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
     auto vol = residual(h) + volume;
 
     std::cout << "========================================================================" << std::endl;
-    std::cout << "Reservoir " << reservoirIdx << ": optimized volume at " << vol << " mm^3" << std::endl;
+    std::cout << "Reservoir " << reservoirIdx << ": optimized volume at " << vol << " μl" << std::endl;
     std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
     writeIntersections<Point>(intersections, outputName);
 
@@ -292,41 +292,45 @@ int main(int argc, char** argv)
     for (int i = 4; i < 8; ++i)
         corners[i][2] -= 1.0*height;
 
-    using HexGeometry = Dune::MultiLinearGeometry<double, 3, 3>;
-    const auto hexCut = HexGeometry(Dune::GeometryTypes::cube(3), corners);
-    writeHex(hexCut, "hex");
+    // using HexGeometry = Dune::MultiLinearGeometry<double, 3, 3>;
+    // const auto hexCut = HexGeometry(Dune::GeometryTypes::cube(3), corners);
+    // writeHex(hexCut, "hex");
 
-    Dune::Timer timer;
-    const auto treeIntersections = intersectingEntities(hexCut, *aabbTree);
-    std::cout << "Computed " << treeIntersections.size() << " tree intersections in " << timer.elapsed() << std::endl;
+    // Dune::Timer timer;
+    // const auto treeIntersections = intersectingEntities(hexCut, *aabbTree);
+    // std::cout << "Computed " << treeIntersections.size() << " tree intersections in " << timer.elapsed() << std::endl;
 
-    const auto intersections = convertIntersections<Point>(treeIntersections);
-    writeIntersections<Point>(intersections, "intersections");
+    // const auto intersections = convertIntersections<Point>(treeIntersections);
+    // writeIntersections<Point>(intersections, "intersections");
 
-    const double intersectionVolume = computeVolume<Point>(intersections);
+    // const double intersectionVolume = computeVolume<Point>(intersections);
 
-    std::cout << "Total volume: " << volume << " mm^3" << std::endl;
-    std::cout << "Intersection volume: " << intersectionVolume << " mm^3 (" << intersectionVolume/volume*100 << "%)" << std::endl;
+    // std::cout << "Total volume: " << volume << " μl" << std::endl;
+    // std::cout << "Intersection volume: " << intersectionVolume << " μl (" << intersectionVolume/volume*100 << "%)" << std::endl;
 
     // rotate once around the clock at a given angle and compute the water body geometry for constant volume
-    const auto angleDegree = getParam<double>("Angle", 18.0);
+    const auto angleDegree = getParam<double>("Problem.Angle", 18.0);
     const auto theta = angleDegree/180.0*M_PI;
     const auto sinTheta = std::sin(theta);
 
-    const auto rotationsPerSecond = getParam<double>("Problem.RotationsPerSecond", 0.5);
-    const auto cycles = getParam<double>("TimeLoop.Cycles", 2.0);
+    const auto rotationsPerSecond = getParam<double>("Problem.RotationsPerMinute", 4.0)/60.0;
+    const auto cycles = getParam<double>("TimeLoop.Cycles", 1.0);
     const auto tEnd = getParam<double>("TimeLoop.TEnd", cycles/rotationsPerSecond);
-    const auto dt = getParam<double>("TimeLoop.Dt", tEnd/cycles/144.0);
+    const auto dt = getParam<double>("TimeLoop.Dt", tEnd/cycles/200.0);
     auto timeLoop = std::make_shared<TimeLoop<double>>(0.0, dt, tEnd);
 
-    const auto fillingRatio = getParam<double>("Problem.InitialFillingRatio", 0.5);
-    std::array<double, 2> volumes({ 0.0, fillingRatio*volume });
+    const auto initialVolume = getParam<double>("Problem.InitialVolumeInMicroLiter", 300.0);
+    const double channelVolume = 16.735;
+    std::array<double, 2> volumes({ 0.0, initialVolume - 2*channelVolume });
 
     // m^3/(s*Pa)
     const auto channelTransmissibility = getParam<double>("Problem.ChannelTransmissibility", 9e-10);
+    // m/(s*Pa)
+    const auto channelVelFactor = getParam<double>("Problem.ChannelVelFactor", 0.026e-1);
 
-    std::ofstream output("output.txt");
-    output << "Time[s] vol0[mm^3] vol1[mm^3] flux0[mm^3/s] flux1[mm^3/s]\n";
+    const auto outputFileName = getParam<std::string>("Problem.OutputFileName", "output.txt");
+    std::ofstream output(outputFileName);
+    output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] maxv_ch0[m/s] maxv_ch1[m/s] beta[rad] gamma[rad]\n";
     timeLoop->start(); do
     {
         // compute current angles
@@ -345,7 +349,7 @@ int main(int argc, char** argv)
         const auto diffP = pressureGradients(*aabbTree, corners, { gamma, beta }, volRegu, timeLoop->timeStepIndex());
 
         // Update volumes using pressure gradients and channel resistance
-        // convert to mm^3/s
+        // convert to μl/s
         const auto netFluxPredict = -1e9*(diffP[0]*channelTransmissibility + diffP[1]*channelTransmissibility);
         // make sure only as much flows as is actually there
         const auto netVolumeExchange = std::clamp(netFluxPredict*timeLoop->timeStepSize(),
@@ -358,10 +362,15 @@ int main(int argc, char** argv)
 
         std::cout << "Time: " << curTime << ", t: " << t << std::endl;
         output << curTime << " "
+               << volumes[0] + volumes[1] + 2*channelVolume << " "
                << volumes[0] << " "
                << volumes[1] << " "
                << -1e9*(diffP[0]*channelTransmissibility) << " "
-               << -1e9*(diffP[1]*channelTransmissibility)
+               << -1e9*(diffP[1]*channelTransmissibility) << " "
+               << -(diffP[0]*channelVelFactor) << " "
+               << -(diffP[1]*channelVelFactor) << " "
+               << beta << " "
+               << gamma
                << "\n";
 
         // go to next time step

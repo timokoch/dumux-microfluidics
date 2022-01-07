@@ -2,8 +2,6 @@
 
 from paraview.simple import *
 import numpy as np
-import time
-import glob
 
 # create a new 'Legacy VTK Reader'
 filename = "chip_void.vtk" #"synth.vtk" # "chip_void.vtk"
@@ -12,7 +10,27 @@ chip_voidvtk = LegacyVTKReader(
     FileNames=['/Users/pumbaa/Sync/Data/LabOnAChip/' + filename]
 )
 
-steps = 360
+channel0 = LegacyVTKReader(
+    registrationName='channel0',
+    FileNames=["channel.vtk"]
+)
+
+transformCh00 = Transform(Input=channel0)
+transformCh00.Transform.Translate = [7.3, -2.0, 3.75]
+transformCh00.Transform.Rotate = [0.0, 0.0, 0.0]
+
+transformCh0 = Transform(Input=transformCh00)
+transformCh0.Transform.Rotate = [0.0, 0.0, 0.0]
+
+transformCh11 = Transform(Input=channel0)
+transformCh11.Transform.Translate = [7.3, -2.0, 3.75]
+transformCh111 = Transform(Input=transformCh11)
+transformCh111.Transform.Rotate = [0.0, 0.0, 180.0]
+
+transformCh1 = Transform(Input=transformCh111)
+transformCh1.Transform.Rotate = [0.0, 0.0, 0.0]
+
+steps = 200
 files0 = [f"/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/test/flowmodel/intersections-reservoir_0-{i}.vtu" for i in range(steps)]
 files1 = [f"/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/test/flowmodel/intersections-reservoir_1-{i}.vtu" for i in range(steps)]
 intersections0 = XMLUnstructuredGridReader(registrationName='intersections0', FileName=files0)
@@ -28,7 +46,15 @@ intersections1.TimeArray = 'None'
 renderView = GetActiveViewOrCreate('RenderView')
 renderView.Background = [1.0, 1.0, 1.0]
 
-# translate to origin (some how the geometry is not centered)
+# make channel blue
+disp = GetDisplayProperties(transformCh0, view=renderView)
+disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+disp = GetDisplayProperties(transformCh1, view=renderView)
+disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+
+# translate to origin (somehow the geometry is not centered)
 transform = Transform(Input=chip_voidvtk)
 if "synth" in filename:
     transform.Transform.Translate = [0.0, 0.0, 0.0]
@@ -47,8 +73,8 @@ transformWater0.Transform.Rotate = [0.0, 0.0, 0.0]
 
 Show()
 dispWater = GetDisplayProperties(transformWater0, view=renderView)
-dispWater.AmbientColor = [0.6666666666666666, 0.6, 1.0]
-dispWater.DiffuseColor = [0.6666666666666666, 0.6, 1.0]
+dispWater.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+dispWater.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 
 transformWater1 = Transform(Input=intersections1)
 transformWater1.Transform.Rotate = [0.0, 0.0, 180.0]
@@ -91,6 +117,8 @@ def update(i):
     with open(f"/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/test/flowmodel/intersections-reservoir_0-{i}.txt") as metaData:
         g, b = metaData.readlines()[0].split()[:2]
         g, b = float(g), float(b)
+        transformCh0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        transformCh1.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transform2.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transformWater0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
 
