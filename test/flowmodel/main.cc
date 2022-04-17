@@ -154,7 +154,7 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
         return iVol - volume;
     };
 
-    auto h = Dumux::findScalarRootBrent(-10.0, 0.0, residual, 1e-2);
+    auto h = Dumux::findScalarRootBrent(-11.0, 0.0, residual, 1e-2);
     auto vol = residual(h) + volume;
 
     std::cout << "========================================================================" << std::endl;
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
     auto timeLoop = std::make_shared<TimeLoop<double>>(0.0, dt, tEnd);
 
     const auto initialVolume = getParam<double>("Problem.InitialVolumeInMicroLiter", 300.0);
-    const double channelVolume = 16.735;
+    const auto channelVolume = getParam<double>("Problem.SingleChannelVolumeInMicroLiter", 16.735);
     std::array<double, 2> volumes({ 0.0, initialVolume - 2*channelVolume });
 
     // m^3/(s*Pa)
