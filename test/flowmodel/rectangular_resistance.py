@@ -50,10 +50,12 @@ def transmissibility(num, length):
     return flow_rate(num)/(G*length)
 
 
+print("Channel volume (µl): ", H*L*channel_length*1e9)
 for n in range(5, 10):
     print("Pressure gradient: ", G)
     print("Flow rate: ", flow_rate(n))
     print("Max velocity: ", velocity(y=0.5*H, z=0.5*L, num=n))
+    print("Max velocity factor: ", velocity(y=0.5*H, z=0.5*L, num=n)/(G*channel_length))
     print("Transmissibility: ", transmissibility(n, length=channel_length))
 
 Q = G*L*H**3/(12.0*mu)*(1.0 - 0.630*H/L)
