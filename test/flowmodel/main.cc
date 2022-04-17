@@ -150,20 +150,23 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
         treeIntersections = intersectingEntities(hexCut, aabbTree);
         intersections = convertIntersections<Point>(treeIntersections);
         const auto iVol = computeVolume<Point>(intersections);
-        //std::cout << "h: " << h << "-> vol: " << iVol << " / residual: " << iVol - volume << std::endl;
+        std::cout << "h: " << h << "-> vol: " << iVol << " / residual: " << iVol - volume << std::endl;
         return iVol - volume;
     };
 
-    auto h = Dumux::findScalarRootBrent(-11.0, 0.0, residual, 1e-2);
+    auto h = Dumux::findScalarRootBrent(-11.0, 5.0, residual, 1e-2, 2000);
     auto vol = residual(h) + volume;
 
     std::cout << "========================================================================" << std::endl;
-    std::cout << "Reservoir " << reservoirIdx << ": optimized volume at " << vol << " μl" << std::endl;
+    std::cout << "Reservoir " << reservoirIdx << ": optimized volume at " << vol << " μl (target: " << volume << " µl)" << std::endl;
     std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
     writeIntersections<Point>(intersections, outputName);
 
-    Point ref0({ 0.5*(3.462435334542 + 3.798170069313) + 7.3, 0.5*(-6.14367530233 -7.067145485502) - 2.0, 0.0 });
-    Point ref1({ 0.5*(3.462435334542 + 3.798170069313) + 7.3, -(0.5*(-6.14367530233 -7.067145485502) - 2.0), 0.0 });
+    static const auto ref0 = Dumux::getParam<Point>("Problem.MeasurementPoint1");
+    static const auto ref1 = Dumux::getParam<Point>("Problem.MeasurementPoint2");
+
+    // Point ref0({ 0.5*(3.462435334542 + 3.798170069313) + 7.3, 0.5*(-6.14367530233 -7.067145485502) - 2.0, 0.0 });
+    // Point ref1({ 0.5*(3.462435334542 + 3.798170069313) + 7.3, -(0.5*(-6.14367530233 -7.067145485502) - 2.0), 0.0 });
 
     auto localCorners = corners;
     for (int i = 4; i < 8; ++i)
@@ -222,18 +225,18 @@ std::array<double, 2> pressureGradients(const Tree& aabbTree, const std::vector<
         diffP1 = 0.0;
 
     if (diffP0 > 1e-7)
-        std::cout << "Channel (1) flow direction R0 " << std::string(int(std::abs(diffP0)), '>') << "> R1 (ΔP: " << diffP0 << " Pa)\n";
+        std::cout << "\x1b[31m" << "Channel (1) flow R0 " << std::string(int(std::abs(diffP0)), '>') << "> R1 (ΔP: " << diffP0 << " Pa)" << "\033[0m" << "\n";
     else if (diffP0 < -1e-7)
-        std::cout << "Channel (1) flow direction R0 <" << std::string(int(std::abs(diffP0)), '<') << " R1 (ΔP: " << diffP0 << " Pa)\n";
+        std::cout << "\x1b[31m" << "Channel (1) flow R0 <" << std::string(int(std::abs(diffP0)), '<') << " R1 (ΔP: " << diffP0 << " Pa)" << "\033[0m" << "\n";
     else
-        std::cout << "Channel (1) flow stopped   R0 |-----| R1\n";
+        std::cout << "\x1b[31m" << "Channel (1) no flow" << "\033[0m" << "\n";
 
     if (diffP1 > 1e-7)
-        std::cout << "Channel (2) flow direction R0 " << std::string(int(std::abs(diffP1)), '>') << "> R1 (ΔP: " << diffP1 << " Pa)\n";
+        std::cout << "\x1b[31m" << "Channel (2) flow R0 " << std::string(int(std::abs(diffP1)), '>') << "> R1 (ΔP: " << diffP1 << " Pa)" << "\033[0m" << "\n";
     else if (diffP1 < -1e-7)
-        std::cout << "Channel (2) flow direction R0 <" << std::string(int(std::abs(diffP1)), '<') << " R1 (ΔP: " << diffP1 << " Pa)\n";
+        std::cout << "\x1b[31m" << "Channel (2) flow R0 <" << std::string(int(std::abs(diffP1)), '<') << " R1 (ΔP: " << diffP1 << " Pa)" << "\033[0m" << "\n";
     else
-        std::cout << "Channel (2) flow stopped   R0 |-----| R1\n";
+        std::cout << "\x1b[31m" << "Channel (2) no flow" << "\033[0m" << "\n";
 
     return { diffP0, diffP1 };
 }
@@ -321,7 +324,8 @@ int main(int argc, char** argv)
 
     const auto initialVolume = getParam<double>("Problem.InitialVolumeInMicroLiter", 300.0);
     const auto channelVolume = getParam<double>("Problem.SingleChannelVolumeInMicroLiter", 16.735);
-    std::array<double, 2> volumes({ 0.0, initialVolume - 2*channelVolume });
+    std::cout << "Initial volume (µl): " << initialVolume << ", channel volume (µl): " << channelVolume << std::endl;
+    std::array<double, 2> volumes({ initialVolume - 2*channelVolume, 0.0 });
 
     // m^3/(s*Pa)
     const auto channelTransmissibility = getParam<double>("Problem.ChannelTransmissibility", 9e-10);

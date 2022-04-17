@@ -4,31 +4,31 @@ from paraview.simple import *
 import numpy as np
 
 # create a new 'Legacy VTK Reader'
-filename = "chip_void.vtk" #"synth.vtk" # "chip_void.vtk"
+filename = "chip.vtk" #"synth.vtk" # "chip_void.vtk"
 chip_voidvtk = LegacyVTKReader(
     registrationName='chip_void',
-    FileNames=['/Users/pumbaa/Sync/Data/LabOnAChip/' + filename]
+    FileNames=['/Users/pumbaa/Sync/Data/LabOnAChip/8March22/' + filename]
 )
 
-channel0 = LegacyVTKReader(
-    registrationName='channel0',
-    FileNames=["channel.vtk"]
-)
+# channel0 = LegacyVTKReader(
+#     registrationName='channel0',
+#     FileNames=["channel.vtk"]
+# )
 
-transformCh00 = Transform(Input=channel0)
-transformCh00.Transform.Translate = [7.3, -2.0, 3.75]
-transformCh00.Transform.Rotate = [0.0, 0.0, 0.0]
+# transformCh00 = Transform(Input=channel0)
+# transformCh00.Transform.Translate = [7.3, -2.0, 3.75]
+# transformCh00.Transform.Rotate = [0.0, 0.0, 0.0]
 
-transformCh0 = Transform(Input=transformCh00)
-transformCh0.Transform.Rotate = [0.0, 0.0, 0.0]
+# transformCh0 = Transform(Input=transformCh00)
+# transformCh0.Transform.Rotate = [0.0, 0.0, 0.0]
 
-transformCh11 = Transform(Input=channel0)
-transformCh11.Transform.Translate = [7.3, -2.0, 3.75]
-transformCh111 = Transform(Input=transformCh11)
-transformCh111.Transform.Rotate = [0.0, 0.0, 180.0]
+# transformCh11 = Transform(Input=channel0)
+# transformCh11.Transform.Translate = [7.3, -2.0, 3.75]
+# transformCh111 = Transform(Input=transformCh11)
+# transformCh111.Transform.Rotate = [0.0, 0.0, 180.0]
 
-transformCh1 = Transform(Input=transformCh111)
-transformCh1.Transform.Rotate = [0.0, 0.0, 0.0]
+# transformCh1 = Transform(Input=transformCh111)
+# transformCh1.Transform.Rotate = [0.0, 0.0, 0.0]
 
 steps = 200
 files0 = [f"/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/test/flowmodel/intersections-reservoir_0-{i}.vtu" for i in range(steps)]
@@ -47,16 +47,16 @@ renderView = GetActiveViewOrCreate('RenderView')
 renderView.Background = [1.0, 1.0, 1.0]
 
 # make channel blue
-disp = GetDisplayProperties(transformCh0, view=renderView)
-disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
-disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
-disp = GetDisplayProperties(transformCh1, view=renderView)
-disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
-disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+# disp = GetDisplayProperties(transformCh0, view=renderView)
+# disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+# disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+# disp = GetDisplayProperties(transformCh1, view=renderView)
+# disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+# disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 
 # translate to origin (somehow the geometry is not centered)
 transform = Transform(Input=chip_voidvtk)
-if "synth" in filename:
+if "synth" in filename or filename == "chip.vtk":
     transform.Transform.Translate = [0.0, 0.0, 0.0]
 else:
     transform.Transform.Translate = [7.3, -2.0, 3.75]
@@ -117,8 +117,8 @@ def update(i):
     with open(f"/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/test/flowmodel/intersections-reservoir_0-{i}.txt") as metaData:
         g, b = metaData.readlines()[0].split()[:2]
         g, b = float(g), float(b)
-        transformCh0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
-        transformCh1.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        # transformCh0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        # transformCh1.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transform2.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transformWater0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
 

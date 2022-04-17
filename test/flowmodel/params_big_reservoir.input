@@ -1,0 +1,17 @@
+[Grid]
+File = big-extruded.msh
+
+[Problem]
+ChannelTransmissibility = 3.8564527485862754e-10 # in m^3/s/Pa
+RotationsPerMinute = 4.0
+Angle = 18.0
+InitialVolumeInMicroLiter = 300.0
+SingleChannelVolumeInMicroLiter = 14.76
+# m/s/Pa multiply pressure difference to get maximum velocity
+ChannelVelFactor = 0.0006859753963743531
+MeasurementPoint1 = -8.2 -10.5 0.0
+MeasurementPoint2 = -8.2 10.5 0.0
+OutputFileName = 18_4_big
+
+[TimeLoop]
+Cycles = 2
