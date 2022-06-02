@@ -19,10 +19,10 @@ Poiseuille flow rectangular tube (H*L)
 # G = -dP/dx
 G = 1
 mu = 1e-3 # Pa*s
-H = 300e-6 # H in y-direction
+H = 500e-6 # H in y-direction
 L = 3000e-6 # L in z-direction
-#channel_length = 16.4e-3 # big reservoir channel
-channel_length = 9.8e-3 # small reservoir channel
+channel_length = 16.4e-3 # big reservoir channel
+#channel_length = 9.8e-3 # small reservoir channel
 
 def velocity(y, z, num):
     result = G/(2*mu)*y*(H - y)

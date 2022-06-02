@@ -2,15 +2,15 @@
 File = small-extruded.msh
 
 [Problem]
-ChannelTransmissibility = 6.453655620083155e-10 # in m^3/s/Pa
+ChannelTransmissibility = 2.853822210567458e-09 # in m^3/s/Pa
 RotationsPerMinute = 4.0
 Angle = 18.0
 InitialVolumeInMicroLiter = 100.0
 SingleChannelVolumeInMicroLiter = 8.82
 # m/s/Pa multiply pressure difference to get maximum velocity
-ChannelVelFactor = 0.0011479588265856523
-MeasurementPoint1 = -4.9 -6.5 0.0
-MeasurementPoint2 = -4.9 6.5 0.0
+ChannelVelFactor = 0.003188244350356462
+MeasurementPoint1 = -4.9 -6.5 -0.49
+MeasurementPoint2 = -4.9 6.5 -0.49
 OutputFileName = 18_4_small
 
 [TimeLoop]
