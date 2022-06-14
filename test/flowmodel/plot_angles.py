@@ -20,4 +20,6 @@ plt.plot(time, gamma*180.0/np.pi)
 plt.ylabel("Angle in degree")
 plt.xlabel("Time in seconds")
 plt.title(f"{rpm} rpm and {angle}° tilt")
+plt.savefig("tilting_angles.pdf")
 plt.show()
+

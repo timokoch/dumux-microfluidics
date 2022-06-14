@@ -2,6 +2,9 @@
 File = big-extruded.msh
 
 [Problem]
+CapillaryStopPressure = 0 # Pa
+MaxFluxChangePerSecond = 500 # µl/s/s
+DryingThresholdInMilliMeter = 0.75 # mm
 ChannelTransmissibility = 1.7053327843634806e-09 # in m^3/s/Pa
 RotationsPerMinute = 4.0
 Angle = 18.0
