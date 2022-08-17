@@ -1,5 +1,7 @@
-Microfluidic applications in relation to a tilting chip platform
-developed by Busek et al (UiO).
+Microfluidic applications with Dumux
+--------------------------------------
+
+Simulations in relation to a tilting chip platform developed by Busek et al (UiO).
 
 Currently contains three mini applications (under `appl/`)
 that are based on the open-source simulator [DuMux](https://dumux.org/):
