@@ -22,7 +22,7 @@ dune_project()
 
 dune_enable_all_packages()
 
-add_subdirectory(test)
+add_subdirectory(appl)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 
