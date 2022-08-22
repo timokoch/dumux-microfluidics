@@ -35,184 +35,13 @@
 
 #include <dumux/geometry/boundingboxtree.hh>
 #include <dumux/geometry/geometricentityset.hh>
-#include <dumux/geometry/intersectingentities.hh>
 
 #include <test/geometry/writetriangulation.hh>
 
-namespace Dumux {
-template<class Geometry, class EntitySet>
-inline void
-intersectingEntities(std::vector<IntersectionInfo<Geometry::coorddimension, typename Geometry::ctype, typename EntitySet::ctype>>& intersections,
-                     const Geometry& geometry,
-                     const BoundingBoxTree<EntitySet>& tree)
-{
-    // check if the world dimensions match
-    static_assert(int(Geometry::coorddimension) == int(EntitySet::dimensionworld),
-        "Can only intersect geometry and bounding box tree of same world dimension");
-
-    // Create data structure for return type
-    intersections.clear();
-    using ctype = typename IntersectionInfo<Geometry::coorddimension, typename Geometry::ctype, typename EntitySet::ctype>::ctype;
-    static constexpr int dimworld = Geometry::coorddimension;
-
-    // compute the bounding box of the given geometry
-    std::array<ctype, 2*Geometry::coorddimension> bBox;
-    ctype* xMin = bBox.data(); ctype* xMax = xMin + Geometry::coorddimension;
-
-    // Get coordinates of first vertex
-    auto corner = geometry.corner(0);
-    for (std::size_t dimIdx = 0; dimIdx < dimworld; ++dimIdx)
-        xMin[dimIdx] = xMax[dimIdx] = corner[dimIdx];
-
-    // Compute the min and max over the remaining vertices
-    for (std::size_t cornerIdx = 1; cornerIdx < geometry.corners(); ++cornerIdx)
-    {
-        corner = geometry.corner(cornerIdx);
-        for (std::size_t dimIdx = 0; dimIdx < dimworld; ++dimIdx)
-        {
-            using std::max;
-            using std::min;
-            xMin[dimIdx] = min(xMin[dimIdx], corner[dimIdx]);
-            xMax[dimIdx] = max(xMax[dimIdx], corner[dimIdx]);
-        }
-    }
-
-    // Call the recursive find function to find candidates
-    intersectingEntities(geometry, tree,
-                         bBox, tree.numBoundingBoxes() - 1,
-                         intersections);
-}
-
-} // end namespace Dumux
-
-template<class Point, class TreeIntersections>
-auto convertIntersections(const TreeIntersections& treeIntersections)
-{
-    std::vector<std::vector<Point>> intersections;
-    intersections.reserve(treeIntersections.size());
-    for (const auto& is : treeIntersections)
-        intersections.emplace_back(std::vector<Point>(is.corners()));
-    return intersections;
-}
-
-template<class Point, class TreeIntersections>
-void convertIntersections(std::vector<std::vector<Point>>& intersections, const TreeIntersections& treeIntersections)
-{
-    intersections.clear();
-    intersections.reserve(treeIntersections.size());
-    for (const auto& is : treeIntersections)
-        intersections.emplace_back(std::vector<Point>(is.corners()));
-}
-
-template<class Point>
-void writeIntersections(const std::vector<std::vector<Point>>& intersections, const std::string& name)
-{
-    // Dune::Timer timer;
-    // std::cout << "Writing " << intersections.size() << " intersections to file ...";
-    Dumux::writeVTUTetrahedron(intersections, name);
-    // std::cout << " done ( " << timer.elapsed() << " seconds)." << std::endl;
-}
-
-template<class Point>
-void writeIntersections(const std::vector<std::array<Point, 4>>& intersections, const std::string& name)
-{
-    // Dune::Timer timer;
-    // std::cout << "Writing " << intersections.size() << " intersections to file ...";
-    Dumux::writeVTUTetrahedron(intersections, name);
-    // std::cout << " done ( " << timer.elapsed() << " seconds)." << std::endl;
-}
-
-template<class Point>
-double computeVolume(const std::vector<std::vector<Point>>& intersections)
-{
-    using Simplex3Geometry = Dune::AffineGeometry<double, 3, 3>;
-    double volume = 0.0;
-    for (const auto& tet : intersections)
-    {
-        const auto tetGeo = Simplex3Geometry(
-            Dune::GeometryTypes::simplex(3), std::array<Point, 4>{{ tet[0], tet[1], tet[2], tet[3] }}
-        );
-        const auto vol = tetGeo.volume();
-        volume += std::isfinite(vol) ? vol : 0; // maybe there are broken intersections
-    }
-    return volume;
-}
-
-template<class Point>
-auto computeVolumeSeparately(const std::vector<std::vector<Point>>& intersections, const double splitY)
-{
-    using Simplex3Geometry = Dune::AffineGeometry<double, 3, 3>;
-    double vol0 = 0.0, vol1 = 0.0;
-    constexpr std::size_t numCorners = 4;
-    for (const auto& tet : intersections)
-    {
-        const auto tetGeo = Simplex3Geometry(
-            Dune::GeometryTypes::simplex(3), std::array<Point, numCorners>{{ tet[0], tet[1], tet[2], tet[3] }}
-        );
-        const auto vol = tetGeo.volume();
-        if (std::isfinite(vol)) // maybe there are broken intersections
-        {
-            for (int i = 0; i < numCorners; ++i)
-            {
-                if (tetGeo.corner(i)[1] < splitY)
-                    vol0 += vol/numCorners;
-                else
-                    vol1 += vol/numCorners;
-            }
-        }
-    }
-    return std::pair{ vol0, vol1 };
-}
-
-template<class ctype>
-auto make3DRotation(const Dune::FieldVector<ctype, 3>& rotationAxis,
-                    const ctype rotationAngle)
-{
-    using std::sin; using std::cos;
-    const ctype sinAngle = sin(rotationAngle);
-    const ctype cosAngle = cos(rotationAngle);
-    return [=](Dune::FieldVector<ctype, 3> p){
-        auto tp = p;
-        tp *= cosAngle;
-        tp.axpy(sinAngle, Dumux::crossProduct({rotationAxis}, p));
-        tp.axpy((1.0-cosAngle)*(rotationAxis*p), rotationAxis);
-        return tp;
-    };
-}
-
-template<class Geometry>
-void writeHex(const Geometry& geometry, const std::string& filename)
-{
-    std::ofstream fout(filename + ".vtu");
-    fout << "<?xml version=\"1.0\"?>\n"
-         << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\">\n"
-         << "  <UnstructuredGrid>\n"
-         << "    <Piece NumberOfPoints=\"" << 8 << "\" NumberOfCells=\"" << 1 << "\">\n"
-         << "      <Points>\n"
-         << "        <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-
-    constexpr std::array<int, 8> map{{ 0, 1, 3, 2, 4, 5, 7, 6 }};
-    for (int i = 0; i < geometry.corners(); ++i)
-        fout << geometry.corner(map[i]) << " ";
-
-    fout << '\n';
-    fout << "        </DataArray>\n"
-         << "      </Points>\n"
-         << "      <Cells>\n"
-         << "        <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
-    fout << "        0 1 2 3 4 5 6 7\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">\n";
-    fout << "        8\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"UInt8\" Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">\n";
-    fout << "        12\n";
-    fout << "        </DataArray>\n"
-         << "      </Cells>\n"
-         << "    </Piece>\n"
-         << "</UnstructuredGrid>\n"
-         << "</VTKFile>\n";
-}
+#include "intersections.hh"
+#include "rotation.hh"
+#include "reservoir.hh"
+#include "volume.hh"
 
 // compute the pressure at channel connections of a reservoir
 template<class Point, class Tree>
@@ -235,8 +64,8 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
     auto hexCut = HexGeometry(Dune::GeometryTypes::cube(3), corners);
 
     // compute intersections of the helper hexahedron with the reservoir geometry
-    auto treeIntersections = intersectingEntities(hexCut, aabbTree);
-    auto intersections = convertIntersections<Point>(treeIntersections);
+    auto treeIntersections = Dumux::intersectingEntities(hexCut, aabbTree);
+    auto intersections = Dumux::convertIntersections<Point>(treeIntersections);
 
     // find the water table height by optimzing the reservoirVolume to the given one
     auto localCorners = corners; // avoid reallocation every iteration
@@ -248,9 +77,9 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
             localCorners[i][2] += h;
 
         hexCut = HexGeometry(Dune::GeometryTypes::cube(3), localCorners);
-        intersectingEntities(treeIntersections, hexCut, aabbTree);
-        convertIntersections<Point>(intersections, treeIntersections);
-        const auto iVol = computeVolume<Point>(intersections);
+        Dumux::intersectingEntities(treeIntersections, hexCut, aabbTree);
+        Dumux::convertIntersections<Point>(intersections, treeIntersections);
+        const auto iVol = Dumux::computeReservoirVolume<Point>(intersections);
         // std::cout << "h: " << h << "-> vol: " << iVol << " / residual: " << iVol - reservoirVolume << std::endl;
         return iVol - reservoirVolume;
     };
@@ -273,7 +102,7 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
     static const auto ref1 = Dumux::getParam<Point>("Problem.MeasurementPoint2");
 
     // split volume at y-axis into two reservoirs (approximation of reservoir volume that is left)
-    const auto [vol0, vol1] = computeVolumeSeparately<Point>(intersections, 0.5*(ref0[1]+ref1[1]));
+    const auto [vol0, vol1] = Dumux::computeReservoirVolumeWithSplit<Point>(intersections, 0.5*(ref0[1]+ref1[1]));
     std::cout << "Volume available for channel 0: " << vol0 << std::endl;
     std::cout << "Volume available for channel 1: " << vol1 << std::endl;
 
@@ -296,8 +125,8 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
     std::cout << "Water heights:      " << dist0 << ", " << dist1 << " mm "
               << "--> dry?: " << std::boolalpha << dry0 << ", " << dry1 << std::endl;
 
-    const auto rotateX = make3DRotation({1.0, 0.0, 0.0}, angle[0]);
-    const auto rotateY = make3DRotation({0.0, 1.0, 0.0}, angle[1]);
+    const auto rotateX = Dumux::make3DRotation({1.0, 0.0, 0.0}, angle[0]);
+    const auto rotateY = Dumux::make3DRotation({0.0, 1.0, 0.0}, angle[1]);
     const auto elevation0 = rotateX(rotateY(ref0))[2];
     const auto elevation1 = rotateX(rotateY(ref1))[2];
 
@@ -313,10 +142,10 @@ auto computeChannelStates(const Tree& aabbTree, std::vector<Point> corners, std:
         metaData << Dumux::Fmt::format("{} {} {} {} {} {} {}\n", angle[0], angle[1], reservoirVolume, p0, p1, dry0, dry1);
     }
 
-    struct State { double pressure; bool dry; double fractionalVolume; };
-    struct ReservoirChannels { State ch0; State ch1; };
+    struct ChannelState { double pressure; bool dry; double fractionalVolume; };
+    struct ReservoirChannels { ChannelState ch0; ChannelState ch1; };
 
-    return ReservoirChannels{ State{ p0, dry0, vol0 }, State{ p1, dry1, vol1 } };
+    return ReservoirChannels{ ChannelState{ p0, dry0, vol0 }, ChannelState{ p1, dry1, vol1 } };
 }
 
 template<class Point, class Tree>
@@ -367,42 +196,18 @@ int main(int argc, char** argv)
 {
     using namespace Dumux;
 
+    // read parameter file "params.input" and command line arguments
     Parameters::init(argc, argv);
 
-    using ALU = Dune::ALUGrid<3, 3, Dune::simplex, Dune::conforming>;
-    Dumux::GridManager<ALU> gridManagerAlu;
-    gridManagerAlu.init();
-    const auto gridView = gridManagerAlu.grid().leafGridView();
-
-    Dune::VTKWriter<ALU::LeafGridView> vtkWriter(gridView);
-    vtkWriter.write("grid", Dune::VTK::base64);
-
-    using EntitySet = GridViewGeometricEntitySet<ALU::LeafGridView, 0>;
-    auto aabbTree = std::make_shared<BoundingBoxTree<EntitySet>>(std::make_shared<EntitySet>(gridView));
-
-    double reservoirVolume = 0.0;
-    using Point = Dune::FieldVector<double, 3>;
-    Point lowerLeft(1e100), upperRight(-1e100);
-    for (const auto& element : elements(gridView))
-    {
-        const auto geometry = element.geometry();
-        reservoirVolume += geometry.volume();
-
-        for (int i = 0; i < geometry.corners(); ++i)
-        {
-            const auto& corner = geometry.corner(i);
-            for (int dir = 0; dir < 3; ++dir)
-            {
-                lowerLeft[dir] = std::min(lowerLeft[dir], corner[dir]);
-                upperRight[dir] = std::max(upperRight[dir], corner[dir]);
-            }
-        }
-    }
+    // construct a grid representation of the reservoir geometry
+    Microfluidic::Reservoir reservoir{};
+    auto [lowerLeft, upperRight] = reservoir.boundingBox();
 
     const auto height = upperRight[2]-lowerLeft[2];
     lowerLeft[2] -= height;
     upperRight[2] += height;
 
+    using Point = Dune::FieldVector<double, 3>;
     std::vector<Point> corners{
         lowerLeft,
         { upperRight[0], lowerLeft[1], lowerLeft[2] },
@@ -429,6 +234,7 @@ int main(int argc, char** argv)
     const auto dt = getParam<double>("TimeLoop.Dt", tEnd/cycles/stepsPerCycle);
     auto timeLoop = std::make_shared<TimeLoop<double>>(0.0, dt, tEnd);
 
+    const auto reservoirVolume = reservoir.volume();
     const auto initialVolume = getParam<double>("Problem.InitialVolumeInMicroLiter", 300.0);
     const auto channelVolume = getParam<double>("Problem.SingleChannelVolumeInMicroLiter", 16.735);
     std::cout << "Initial reservoirVolume (µl): " << initialVolume << ", channel reservoirVolume (µl): " << channelVolume << std::endl;
@@ -469,7 +275,7 @@ int main(int argc, char** argv)
         auto volRegu = volumes;
         volRegu[0] = std::clamp(volRegu[0], 1e-2, reservoirVolume-1e-2);
         volRegu[1] = std::clamp(volRegu[1], 1e-2, reservoirVolume-1e-2);
-        const auto diffP = pressureGradients(*aabbTree, corners, { gamma, beta }, volRegu, timeLoop->timeStepIndex());
+        const auto diffP = pressureGradients(reservoir.boundingBoxTree(), corners, { gamma, beta }, volRegu, timeLoop->timeStepIndex());
 
         // Update volumes using pressure gradients and channel resistance
         // convert to μl/s
@@ -577,8 +383,7 @@ int main(int argc, char** argv)
         std::cout << std::endl;
 
     } while (!timeLoop->finished());
-
-    timeLoop->finalize(gridView.comm());
+    timeLoop->finalize();
 
     return 0;
 }
