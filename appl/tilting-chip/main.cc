@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <array>
+#include <tuple>
 
 #include <dune/common/timer.hh>
 #include <dune/grid/io/file/vtk.hh>
@@ -33,60 +34,12 @@
 #include "channel.hh"
 #include "motionfunction.hh"
 
-std::array<double, 2> pressureGradients(const Dumux::Microfluidic::Reservoir& reservoir,
-                                        const std::array<double, 2> angle,
-                                        const std::array<double, 2> volumes,
-                                        int timeStepIndex)
-{
-    // for the first reservoir use the given angles
-    const auto reservoir0State = Dumux::Microfluidic::computeChannelStates(reservoir, angle, volumes[0], timeStepIndex, 0);
-    // for the second reservoir we use minus the given angles (geometry mirrored at center of rotation (origin))
-    const auto reservoir1State = [&]{
-        auto s = Dumux::Microfluidic::computeChannelStates(reservoir, { -angle[0], -angle[1] }, volumes[1], timeStepIndex, 1);
-        std::swap(s.ch0, s.ch1); // mirrored channel states
-        return s;
-    }();
-
-    auto diffP0 = reservoir0State.ch0.pressure() - reservoir1State.ch0.pressure();
-    auto diffP1 = reservoir0State.ch1.pressure() - reservoir1State.ch1.pressure();
-
-    // parameter for the ad-hoc "capillary stop valve" model
-    static const double capillaryStopPressure = Dumux::getParam<double>("Problem.CapillaryStopPressure");
-
-    // flow is only happening if the upstream connection is not dry
-    if ((diffP0 > 0.0 && reservoir0State.ch0.isDry()) || (diffP0 < 0.0 && reservoir1State.ch0.isDry()))
-    {
-        std::cout << "Channel (1) stopped by dry upstream inlet" << std::endl;
-        diffP0 = 0.0;
-    }
-    // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition)
-    else if ((reservoir1State.ch0.isDry() && diffP0 > 0.0 && diffP0 < capillaryStopPressure) || (reservoir0State.ch0.isDry() && diffP0 < 0.0 && diffP0 > -capillaryStopPressure))
-    {
-        std::cout << "Channel (1) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP0 << std::endl;
-        diffP0 = 0.0;
-    }
-    // flow is only happening if the upstream connection is not dry
-    if ((diffP1 > 0.0 && reservoir0State.ch1.isDry()) || (diffP1 < 0.0 && reservoir1State.ch1.isDry()))
-    {
-        std::cout << "Channel (2) stopped by dry upstream inlet" << std::endl;
-        diffP1 = 0.0;
-    }
-    // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition)
-    else if ((reservoir1State.ch1.isDry() && diffP1 > 0.0 && diffP1 < capillaryStopPressure) || (reservoir0State.ch1.isDry() && diffP1 < 0.0 && diffP1 > -capillaryStopPressure))
-    {
-        std::cout << "Channel (2) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP1 << std::endl;
-        diffP1 = 0.0;
-    }
-
-    return { diffP0, diffP1 };
-}
-
 int main(int argc, char** argv)
 {
     // read parameter file "params.input" and command line arguments
     Dumux::Parameters::init(argc, argv);
 
-    // construct a grid representation of the reservoir geometry
+    // construct a grid representation of the reservoir geometry ("Grid.File")
     Dumux::Microfluidic::Reservoir reservoir{};
 
     // initial conditions
@@ -122,6 +75,9 @@ int main(int argc, char** argv)
     std::array<double, 2> fluxInChannel{{0.0, 0.0}};
     std::array<double, 2> fluxInChannelDeriv{{0.0, 0.0}};
 
+    // parameter for the ad-hoc "capillary stop valve" model
+    const double capillaryStopPressure = Dumux::getParam<double>("Problem.CapillaryStopPressure");
+
     // the motion function (using constant tilt here / can be replaced by something else in the future)
     const auto rotationsPerSecond = Dumux::getParam<double>("Problem.RotationsPerMinute", 4.0)/60.0;
     std::shared_ptr<Dumux::Microfluidic::MotionFunction> motionFunction
@@ -136,20 +92,84 @@ int main(int argc, char** argv)
 
     timeLoop->start(); do
     {
-        // compute current rotation angles of the platform
         const auto curTime = timeLoop->time();
-        const auto [beta, gamma] = motionFunction->rotationAngles(curTime);
+        const auto timeStepIndex = timeLoop->timeStepIndex();
 
-        // compute current pressure gradients for the channels
-        const auto diffP = pressureGradients(reservoir, { gamma, beta }, volumes, timeLoop->timeStepIndex());
+        // compute current rotation angles of the platform
+        double beta = 0.0, gamma = 0.0;
+        std::tie(beta, gamma) = motionFunction->rotationAngles(curTime);
 
-        // Update volumes using pressure gradients and channel resistance
-        // convert to μl/s
+        // compute current channel states (pressure, available volume, dry/wet)
+        // for the first reservoir use the given angles
+        // for the second reservoir we use minus the given angles (geometry mirrored at center of rotation (origin))
+        const auto reservoir0State = Dumux::Microfluidic::computeChannelStates(reservoir, { gamma, beta }, volumes[0], timeStepIndex, 0);
+        const auto reservoir1State = [&]{
+            auto s = Dumux::Microfluidic::computeChannelStates(reservoir, { -gamma, -beta }, volumes[1], timeStepIndex, 1);
+            std::swap(s.ch0, s.ch1); // mirrored channel states
+            return s;
+        }();
+
+        // pressure differences in the two channels based on local elevation and water table height difference
+        std::array<double, 2> diffP{{
+            reservoir0State.ch0.pressure() - reservoir1State.ch0.pressure(),
+            reservoir0State.ch1.pressure() - reservoir1State.ch1.pressure()
+        }};
+
+        // Update volumes using pressure gradients and channel resistance (and convert to μl/s)
         fluxInChannel[0] = -1e9*diffP[0]*channelTransmissibility;
         fluxInChannel[1] = -1e9*diffP[1]*channelTransmissibility;
         const auto dt = timeLoop->timeStepSize();
 
-        // check that the flux doesn't grow too much per time (inertia)
+        ////////////////////////////////////////////////////////////////////////////////
+        // Flux limiters ///////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        // Several mechanisms limit the flux that will actually flow:
+        //
+        // (1) The upstream inlet of the channel has to be wet (connected to the water body)
+        //     otherwise the flux is zero.
+        //
+        // (2) The pressure difference has to be higher than the capillary pressure required
+        //     for imbibition of the reservoir (water wants to rather stay in the narrow channel
+        //     minimizing liquid-gas interface curvature) so that flow occurs.
+        //
+        // (3) The flow rate cannot change infinitely fast (inertia).
+        //
+        // (4) The maximum amount that can flow in this time step is limited by the available
+        //     and connected upstream water body volume
+        //
+        // (5) The maximum amount that can flow in this time step is limited by the available
+        //     space in the downstream reservoir (no overflow)
+        //
+        //////////////////////////////////////////////////////////////////////////////////
+
+        // flow is only happening if the upstream connection is not dry (1)
+        if ((diffP[0] > 0.0 && reservoir0State.ch0.isDry()) || (diffP[0] < 0.0 && reservoir1State.ch0.isDry()))
+        {
+            std::cout << "Channel (1) stopped by dry upstream inlet" << std::endl;
+            fluxInChannel[0] = 0.0;
+        }
+        // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition) (2)
+        else if ((reservoir1State.ch0.isDry() && diffP[0] > 0.0 && diffP[0] < capillaryStopPressure) || (reservoir0State.ch0.isDry() && diffP[0] < 0.0 && diffP[0] > -capillaryStopPressure))
+        {
+            std::cout << "Channel (1) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[0] << std::endl;
+            fluxInChannel[0] = 0.0;
+        }
+
+        // flow is only happening if the upstream connection is not dry (1)
+        if ((diffP[1] > 0.0 && reservoir0State.ch1.isDry()) || (diffP[1] < 0.0 && reservoir1State.ch1.isDry()))
+        {
+            std::cout << "Channel (2) stopped by dry upstream inlet" << std::endl;
+            fluxInChannel[1] = 0.0;
+        }
+        // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition) (2)
+        else if ((reservoir1State.ch1.isDry() && diffP[1] > 0.0 && diffP[1] < capillaryStopPressure) || (reservoir0State.ch1.isDry() && diffP[1] < 0.0 && diffP[1] > -capillaryStopPressure))
+        {
+            std::cout << "Channel (2) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[1] << std::endl;
+            fluxInChannel[1] = 0.0;
+        }
+
+        // check that the flux doesn't grow too much per time (ad-hoc inertia model) (3)
         {
             fluxInChannelDeriv[0] = (fluxInChannel[0] - fluxInChannelOld[0])/dt;
             fluxInChannelDeriv[1] = (fluxInChannel[1] - fluxInChannelOld[1])/dt;
@@ -182,7 +202,7 @@ int main(int argc, char** argv)
         }
 
         const auto netFluxPredict = fluxInChannel[0] + fluxInChannel[1];
-        // make sure only as much flows as is actually there
+        // make sure only as much flows as is actually there; (4) and (5)
         const auto predictedNetVolumeExchange = netFluxPredict*timeLoop->timeStepSize();
         const auto netVolumeExchange = std::clamp(predictedNetVolumeExchange,
             // minimum is constrained by what's left in reservoirVolume 0 or can be added to reservoirVolume 1
