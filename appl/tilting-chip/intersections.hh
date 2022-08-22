@@ -26,6 +26,7 @@
 #include <array>
 #include <vector>
 
+#include <test/geometry/writetriangulation.hh>
 #include <dumux/geometry/intersectingentities.hh>
 
 namespace Dumux {

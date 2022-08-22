@@ -24,7 +24,9 @@
 #define DUMUX_MICROFLUIDIC_ROTATION_HH
 
 #include <cmath>
+
 #include <dune/common/fvector.hh>
+
 #include <dumux/common/math.hh>
 
 namespace Dumux {
