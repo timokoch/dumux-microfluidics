@@ -88,8 +88,8 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
 
     // split volume at y-axis into two reservoirs (approximation of fluid volume that is left for each channel)
     const auto [vol0, vol1] = computeReservoirVolumeWithSplit<Point>(fluidBody.triangulation, 0.5*(ref0[1]+ref1[1]));
-    std::cout << "Volume available for channel 0: " << vol0 << std::endl;
-    std::cout << "Volume available for channel 1: " << vol1 << std::endl;
+    std::cout << "Volume available for Channel (1): " << vol0 << std::endl;
+    std::cout << "Volume available for Channel (2): " << vol1 << std::endl;
 
     // distance of measurement point to water table
     const auto dist0 = std::max(0.0, (fluidBody.waterTablePoint - ref0)*fluidBody.waterTableNormal);

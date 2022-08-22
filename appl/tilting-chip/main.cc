@@ -133,7 +133,8 @@ int main(int argc, char** argv)
         //     for imbibition of the reservoir (water wants to rather stay in the narrow channel
         //     minimizing liquid-gas interface curvature) so that flow occurs.
         //
-        // (3) The flow rate cannot change infinitely fast (inertia).
+        // (3) The flow rate cannot change infinitely fast (inertia). We prescribe a constant
+        //     maximum value by which the flow rate can change per second.
         //
         // (4) The maximum amount that can flow in this time step is limited by the available
         //     and connected upstream water body volume
@@ -195,10 +196,36 @@ int main(int argc, char** argv)
 
             bool regularized = regularizeFlux(0);
             if (regularized)
-                std::cout << "Regularized Channel (1) flux/dt: " << fluxInChannelDeriv[0] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
+                std::cout << "Channel (1) regularized flux/dt: " << fluxInChannelDeriv[0] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
             regularized = regularizeFlux(1);
             if (regularized)
-                std::cout << "Regularized Channel (2) flux/dt: " << fluxInChannelDeriv[1] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
+                std::cout << "Channel (2) regularized flux/dt: " << fluxInChannelDeriv[1] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
+        }
+
+        // flow from reservoir 0 to reservoir 1 in channel 0 (4)
+        if (fluxInChannel[0] < 0.0 && fluxInChannel[0] < -reservoir0State.ch0.availableFluidVolume()/dt)
+        {
+            fluxInChannel[0] = -reservoir0State.ch0.availableFluidVolume()/dt;
+            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
+        }
+        // flow from reservoir 1 to reservoir 0 in channel 0 (4)
+        else if (fluxInChannel[0] > 0.0 && fluxInChannel[0] > reservoir1State.ch0.availableFluidVolume()/dt)
+        {
+            fluxInChannel[0] = -reservoir0State.ch0.availableFluidVolume()/dt;
+            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
+        }
+
+        // flow from reservoir 0 to reservoir 1 in channel 1 (4)
+        if (fluxInChannel[1] < 0.0 && fluxInChannel[1] < -reservoir0State.ch1.availableFluidVolume()/dt)
+        {
+            fluxInChannel[1] = -reservoir0State.ch1.availableFluidVolume()/dt;
+            std::cout << "Channel (2) flux limited because too little upstream water is available" << std::endl;
+        }
+        // flow from reservoir 1 to reservoir 0 in channel 1 (4)
+        else if (fluxInChannel[1] > 0.0 && fluxInChannel[1] > reservoir1State.ch1.availableFluidVolume()/dt)
+        {
+            fluxInChannel[1] = -reservoir0State.ch1.availableFluidVolume()/dt;
+            std::cout << "Channel (2) flux limited because too little upstream water is available" << std::endl;
         }
 
         const auto netFluxPredict = fluxInChannel[0] + fluxInChannel[1];
@@ -231,16 +258,16 @@ int main(int argc, char** argv)
             fluxInChannel[1] *= fraction;
         }
 
-        if (diffP[0] > 1e-7)
+        if (fluxInChannel[0] < -1e-7)
             std::cout << "\x1b[31m" << "Channel (1) flow R0 " << std::string(int(std::abs(fluxInChannel[0])), '>') << "> R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s)" << "\033[0m" << "\n";
-        else if (diffP[0] < -1e-7)
+        else if (fluxInChannel[0] > 1e-7)
             std::cout << "\x1b[31m" << "Channel (1) flow R0 <" << std::string(int(std::abs(fluxInChannel[0])), '<') << " R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s)" << "\033[0m" << "\n";
         else
             std::cout << "\x1b[31m" << "Channel (1) no flow" << "\033[0m" << "\n";
 
-        if (diffP[1] > 1e-7)
+        if (fluxInChannel[1] < -1e-7)
             std::cout << "\x1b[31m" << "Channel (2) flow R0 " << std::string(int(std::abs(fluxInChannel[1])), '>') << "> R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s)" << "\033[0m" << "\n";
-        else if (diffP[1] < -1e-7)
+        else if (fluxInChannel[1] > 1e-7)
             std::cout << "\x1b[31m" << "Channel (2) flow R0 <" << std::string(int(std::abs(fluxInChannel[1])), '<') << " R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s)" << "\033[0m" << "\n";
         else
             std::cout << "\x1b[31m" << "Channel (2) no flow" << "\033[0m" << "\n";
