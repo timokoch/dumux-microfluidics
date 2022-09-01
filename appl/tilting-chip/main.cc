@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     // write an output file as text file so that we can make plots over time
     const auto outputFileName = Dumux::getParam<std::string>("Problem.OutputFileName", "output.txt");
     std::ofstream output(outputFileName);
-    output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] max_wss_ch0[m/s] max_wss_ch1[m/s] beta[rad] gamma[rad]\n";
+    output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] max_wss_ch0[Pa] max_wss_ch1[Pa] beta[rad] gamma[rad]\n";
 
     // parameters for ad-hoc model of inertia effects
     // maximum flux change per second
