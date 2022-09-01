@@ -60,13 +60,13 @@ int main(int argc, char** argv)
 
     // m^3/(s*Pa)
     const auto channelTransmissibility = Dumux::getParam<double>("Problem.ChannelTransmissibility");
-    // m/(s*Pa), conversion factor from flow rate to velocity (this is a constant for Stokes flow)
-    const auto channelVelFactor = Dumux::getParam<double>("Problem.ChannelVelFactor");
+    // max(WSSx)/Q, conversion factor from flow rate to velocity (this is a constant for laminar flow)
+    const auto channelWSSFactor = Dumux::getParam<double>("Problem.ChannelWSSFactor");
 
     // write an output file as text file so that we can make plots over time
     const auto outputFileName = Dumux::getParam<std::string>("Problem.OutputFileName", "output.txt");
     std::ofstream output(outputFileName);
-    output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] maxv_ch0[m/s] maxv_ch1[m/s] beta[rad] gamma[rad]\n";
+    output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] max_wss_ch0[m/s] max_wss_ch1[m/s] beta[rad] gamma[rad]\n";
 
     // parameters for ad-hoc model of inertia effects
     // maximum flux change per second
@@ -282,8 +282,8 @@ int main(int argc, char** argv)
                << volumes[1] << " "
                << fluxInChannel[0] << " "
                << fluxInChannel[1] << " "
-               << -(fluxInChannel[0]*1e-9/channelTransmissibility*channelVelFactor) << " "
-               << -(fluxInChannel[1]*1e-9/channelTransmissibility*channelVelFactor) << " "
+               << std::abs(fluxInChannel[0]*1e-9*channelWSSFactor) << " "
+               << std::abs(fluxInChannel[1]*1e-9*channelWSSFactor) << " "
                << beta << " "
                << gamma
                << std::endl;
