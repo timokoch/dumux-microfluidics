@@ -6,9 +6,9 @@ BoundarySegments = true # read boundary markers (gmsh physical entities)
 
 [Problem]
 Name = test_channel
-DeltaP = 1
+DeltaP = 100
 EnableGravity = false
-EnableInertiaTerms = false
+EnableInertiaTerms = true
 
 [FreeFlow]
 EnableUnsymmetrizedVelocityGradient = true
@@ -28,4 +28,4 @@ BaseEpsilon = 0.1
 [Newton]
 MinSteps = 1
 EnableAbsoluteResidualCriterion = true
-MaxAbsoluteResidual = 1e-5
+MaxAbsoluteResidual = 1e-15

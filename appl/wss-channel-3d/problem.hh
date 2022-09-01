@@ -141,6 +141,17 @@ public:
                 const auto p = isInlet_(scvf) ? deltaP_ : 0.0;
                 values.axpy(-p, scvf.unitOuterNormal());
             }
+
+            if (this->enableInertiaTerms())
+            {
+                if (isOutlet_(scvf) || isInlet_(scvf))
+                {
+                    // advective term: vv*n
+                    const auto elemSol = elementSolution(element, elemVolVars, fvGeometry);
+                    const auto v = evalSolution(element, element.geometry(), fvGeometry.gridGeometry(), elemSol, scvf.ipGlobal());
+                    values.axpy(density_*(v*scvf.unitOuterNormal()), v);
+                }
+            }
         }
         else
         {
