@@ -15,4 +15,4 @@ and several helper scripts (Python).
 Installation instructions
 ---------------------------
 
-ToDo
+ToDo. See https://dumux.org/installation/ for now.
