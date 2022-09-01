@@ -1,4 +1,5 @@
 file(GLOB MESH_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.msh")
 file(GLOB PARAM_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.input")
+file(GLOB PARAM_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.py")
 dune_symlink_to_source_files(FILES plot_flow.py ${PARAM_FILES} ${MESH_FILES})
 add_executable(flow_model main.cc)
