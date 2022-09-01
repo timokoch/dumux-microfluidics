@@ -1,0 +1,211 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[tableposition=top,labelfont=bf]{caption}
+\usepackage{circuitikz}
+\usepackage{siunitx}
+\usepackage[square,numbers]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalize]{cleveref}
+\usepackage{multirow}
+\usepackage{doi}
+\usepackage[
+    type={CC},
+    modifier={by-sa},
+    version={4.0},
+    imageposition={right},
+    imagewidth=6em,
+    %imagemodifier={-80x15},
+]{doclicense}
+\usepackage{geometry}
+\geometry{
+ a4paper,
+ left=20mm,
+ right=20mm,
+ top=30mm,
+ bottom=30mm,
+}
+
+\newtheorem{theorem}{Theorem}
+
+%\title{Supplementary material: Channel flow rate, velocity, wall shear stress}
+%\author{Timo Koch}
+%\date{August 2022}
+
+\begin{document}
+%\maketitle
+
+%These lecture are being updated from time to time and sections may be added or deleted upon request. We try our best but cannot guarantee that all content is indeed correct. In case you find errors in the script, please report them at \url{timokoch@uio.no} so we can fix them.
+%\doclicenseThis
+
+\section*{Supplementary material: Channel flow rate, velocity, wall shear stress}
+Timo Koch (\url{timokoch@uio.no}) as supplementary material for Busek et al. ``Pump-less, directional flow recirculation organ-on-a-chip (rOoC) platform''.
+
+\section{Fully-developed laminar incompressible flow in a straight channel}
+Fluid flow of an incompressible ($\rho = \text{const.})$ Newtonian fluid in a channel is described by the Navier-Stokes equations,
+\begin{subequations}
+\begin{align}
+\rho\frac{\partial \boldsymbol{u}}{\partial t} + \rho\operatorname{div}(\boldsymbol{u} \otimes\boldsymbol{u}) - \operatorname{div}(2\mu \boldsymbol{D}(\boldsymbol{u}) - p\boldsymbol{I}) - \rho \boldsymbol{g} &= \boldsymbol{0}, \\
+\operatorname{div}\boldsymbol{u} &= 0,
+\end{align}
+\end{subequations}
+with $\boldsymbol{D}(\boldsymbol{u}) = \frac{1}{2}\left( \nabla \boldsymbol{u} + \nabla^T \boldsymbol{u} \right)$ or component-wise in Cartersian coordinates (and simplifying the viscous term using the continuity equation\footnote{$\operatorname{div}(2\mu \boldsymbol{D}(\boldsymbol{u})) = \operatorname{div}(\mu \nabla\boldsymbol{u})$, due to $\operatorname{div}\boldsymbol{u} = 0$, i.e. for incompressible fluids.}),
+\begin{subequations}
+\begin{align}
+\rho \left({\partial_t u_x} + u_x \, {\partial_x u_x} + u_y \, {\partial_y u_x} + u_z \, {\partial_z u_x}\right) + \partial_x p - \mu \left({\partial_x^2 u_x} + {\partial_y^2 u_x} + {\partial_z^2 u_x}\right) - \rho g_x &= 0, \\
+\rho \left({\partial_t u_y} + u_x {\partial_x u_y} + u_y {\partial_y u_y} + u_z {\partial_z u_y}\right) + {\partial_y p} - \mu \left({\partial_x^2 u_y} - {\partial_y^2 u_y} + {\partial_z^2 u_y}\right) - \rho g_y &= 0, \\
+\rho \left({\partial_t u_z} + u_x {\partial_x u_z} + u_y {\partial_y u_z} + u_z {\partial_z u_z}\right) + {\partial_z p} - \mu \left({\partial_x^2 u_z} - {\partial_y^2 u_z} + {\partial_z^2 u_z}\right) - \rho g_z &= 0, \\
+\partial_x u_x + \partial_y u_y + \partial_z u_z &= 0, \label{eq:mass}
+\end{align}
+\label{eq:ns}
+\end{subequations}
+with velocity $\boldsymbol{u} = (u_x, u_y, u_z)^T$, pressure $p$, (constant) fluid density $\rho$, (constant) dynamic fluid viscosity $\mu$, gravitational acceleration $\boldsymbol{g} = (g_x, g_y, g_z)^T$, and $\partial_k(\cdot)$ denotes the partial derivative $\partial (\cdot)/\partial k$. Stationary, fully-developed laminar flow corresponds to the assumptions:
+\begin{align}
+\partial_t \boldsymbol{u} &= \boldsymbol{0}, \\
+v_x &= v_y = 0,
+\end{align}
+where the coordinate $z$ corresponds to the channel axis. That means, we have irrotational, layered, unidirectional flow in the channel direction. From the continuity equation \cref{eq:mass}, we obtain that $\partial_z u_z = 0$. Therefore, \Cref{eq:ns} can be simplified to
+a simple Poisson equation,
+\begin{align}
+    \frac{\partial^2 u_z^2}{\partial x^2} + \frac{\partial^2 u_z}{\partial x^2} = \frac{1}{\mu}\left(\frac{\partial p}{\partial z} - \rho g_z\right) := -\frac{G}{\mu},
+\label{eq:poisson}
+\end{align}
+valid for \emph{arbitrary} channel cross-sections. To be solvable, we need to provide boundary conditions on the channel wall, which usually is the no-slip boundary condition $\boldsymbol{u} = \boldsymbol{0}$, also referred to as homogeneous Dirichlet boundary condition. $G$ is a constant and measures the driving force.
+
+Wall shear stress vectors are given by the tangential projection of the shear stress tensor onto the channel boundary,
+\begin{align}
+    \boldsymbol{\tau}_w = \boldsymbol{\sigma}\boldsymbol{n} - (\boldsymbol{\sigma}\boldsymbol{n} \cdot \boldsymbol{n})\boldsymbol{n}, \quad\text{where}\quad \boldsymbol{\sigma} = 2\mu \boldsymbol{D}(\boldsymbol{u}) - p\boldsymbol{I},
+\label{eq:wss}
+\end{align}
+where $\boldsymbol{n}$ denotes the outward-point unit normal vector on the channel wall.
+Wall shear stress (WSS) is then defined as the magnitude of the wall shear stress vector, $\text{WSS} := \rVert \boldsymbol{\tau}_w \lVert$.
+
+\section{Rectangular cross-sections}
+In a rectangular cross-section with width $W:=2w$ and height $H:=2h$, $W \geq H$, an analytic solution to \cref{eq:poisson} is found by separation of variables, and given in \cite{Shah1978} or \cite{Papanastasiou2021}, for $x \in [-w, w]$ and $y \in [-h, h]$,
+\begin{align}
+    u_z(x,y) &= G\frac{h^2}{2\mu} \left[ 1 - \hat{y}^2 + 4 \sum\limits_{k=1}^{\infty} \frac{(-1)^k}{\beta_k^3} \frac{\cosh{b_k \frac{x}{h}}}{\cosh{b_k \gamma}} \cos{b_k \hat{y}} \right] \label{eq:velo_rect}\\\nonumber
+    \beta_k &= (2k-1)\frac{\pi}{2}, \quad k = 1,2,\cdots,
+\end{align}
+with $\hat{y} = y/h$ (dimensionless height) and $\gamma = w/h$ (aspect ratio). The flow rate is given by \cite{Papanastasiou2021}
+\begin{align}
+    Q &= G\frac{H^3 W}{12\mu} \left[ 1 - \frac{6}{\gamma} \sum\limits_{k=1}^{\infty} \frac{\tanh{\beta_k \gamma}}{\beta_k^5} \right] := G L t, \label{eq:flowrate_rect}
+\end{align}
+where $L$ denotes channel length, and $t := \frac{Q}{GL}$ defines the channel transmissibility.
+The transmissibility is given in the following for convenience. We also give an approximation for high aspect ratios $W \gg H$ ($\tanh{\beta_k \gamma} \approx 1$),
+\begin{align}
+    t = \frac{H^3W}{12\mu L} \left[ 1 - \frac{6}{\gamma} \sum\limits_{k=1}^{\infty} \frac{\tanh{\beta_k \gamma}}{\beta_k^5} \right] \approx \frac{H^3W}{12\mu L}\left[1 - \frac{0.63}{\gamma}\right]. \label{eq:trans_rect}
+\end{align}
+The wall shear stress in an axis-aligned rectangular channel allows for a simple expression due to the geometry. The normal vector on the side wall is given by $\boldsymbol{n}_x = (1,0,0)^T$. Since $u_x = u_y = 0$, and with \cref{eq:velo_rect} there is an analytic expression for $u_z$, we have
+\begin{align}
+    \text{WSS}_x \big\rvert_{x=w} := \mu\frac{\partial u_z}{\partial x} = GH \left[ \sum\limits_{k=1}^{\infty} \frac{(-1)^k}{\beta_k^2} \tanh{\beta_k \gamma} \cos{\beta_k \hat{y}} \right]. \label{eq:wss_rect}
+\end{align}
+The maximum wall shear stress occurs on mid-height of the channel ($y=\hat{y} = 0$),
+\begin{align}
+    \text{WSS}^\text{max}_x := \text{WSS}_x \big\rvert_{x=w,y=0} = GH \left[ \sum\limits_{k=1}^{\infty} \frac{(-1)^k}{\beta_k^2} \tanh{\beta_k \gamma} \right]. \label{eq:wss_rect}
+\end{align}
+We remark that the terms in brackets in \cref{eq:velo_rect,eq:flowrate_rect,eq:trans_rect,eq:wss_rect} are dimensionless. Therefore, the quantities such as flow rate and maximum side wall shear stress can be obtained for different channel dimensions by a simple scaling.
+
+\section{Characteristic numbers}
+We define the hydrodynamic diameter as $D_\text{hy} = 2\frac{HW}{H+W}$. The Reynolds number is given by
+\begin{equation}
+    \text{Re} = \frac{V D_\text{hy} \rho}{\mu},
+\end{equation}
+where $V$ is a characteristic velocity. It relates inertial to viscous forces. Pipe flow is assumed to be laminar for $\text{Re} \lessapprox 2300$.
+We estimate the effect of transient inertial forces in comparison to the viscous forces by computing the Womersley number. Then the Womersley number is given by
+\begin{equation}
+    \text{Wo} = \frac{D_\text{hy}}{2} \left( \frac{\omega\rho}{\mu} \right)^\frac{1}{2}.
+\end{equation}
+For $\text{Wo} < 1$ transient effects are expected to \emph{not} play a significant role for the shape of the velocity profiles (this concerns mostly inertia effect close to the boundary of the channel).
+
+At the entrance of the channel, the flow is usually not fully developed yet. The hydrodynamic entry length $L_e$ necessary to reach fully-developed flow (meaning a profile that deviates less than \SI{1}{\percent} from theoretical fully-developed flow) has been estimated in rectangular ducts, e.g. \cite{Han1960}, in the form
+\begin{align}
+  L_e = \Phi(\gamma^{-1}) D_\text{hy} \text{Re}
+\end{align}
+where $\Phi$ depends on the (inverse) aspect ratio $\gamma^{-1} = H/W$ of the channel. It it between $\Phi(0) \approx 0.01$ (parallel plate solution) and $\Phi(1) \approx 0.075$, with $\Phi(2/3) \approx 0.07$, $\Phi(1/6) \approx 0.025$, see \cite[Table 2]{Han1960}.
+
+
+\section{Channels in this work}
+The channel dimensions and characteristics numbers of given in \cref{tab:val}. We estimate the largest flow velocities to be about \SI{0.2}{\m\per\s}. The frequency $\omega$ is given by the rotation frequency, and an upper bound in practical applications is $\omega = \SI{0.17}{\per\s}$ ($10$~rpm). The flow is therefore expected to be laminar in these channels (one of the assumptions for the derivation of the channel transmissibility). Transient effects are expected to \emph{not} play a significant role for the velocity profiles (this concerns mostly inertia effect close to the boundary of the channel). The entry length is relatively large so that the flow is only fully developed in the middle of the channel. This means we make some error in the transmissibility estimate at large velocities, however, this is expected to be less significant than other effects, e.g. capillary effects at the channel entrance. Since, we are interested in wall shear stress (WSS) in the middle of the domain where most of the cells are growing, we expect WSS estimates in the middle of the channel to be sufficiently accurate for the presented analysis.
+\begin{table}[!htb]
+\caption{Channel dimensions and characteristic numbers for the rectangular cross-section channels analysed with the mathematical model in this work. Reynolds number, $\text{Re}$, Womersley number $\text{Wo}$, and hydrodynamic entry length, $L_e$, are estimates based on a characteristic velocity of $V = \SI{0.2}{\m\per\s}$ and frequency $\omega = \SI{0.17}{\per\s}$ which are at the upper end of expected values.}
+\centering
+\begin{tabular}{lllllllll}
+\toprule
+                             & $H$ & $W$ & $L$ & $D_\text{hy}$ & $H\times W\times L$ & $\text{Re}_\text{max}$  & $\text{Wo}_\text{max}$ & $L_{e,\text{max}}$ \\\midrule
+    Channel 1 (short) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{9.8}{\milli\m}  & \SI{0.86}{\milli\m} & \SI{15.68}{\micro\liter} & 170 & 0.18 & \SI{3.7}{\milli\m} \\
+    Channel 1 (long) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.86}{\milli\m} & \SI{26.24}{\micro\liter} & 170 & 0.18 & \SI{3.7}{\milli\m}\\\midrule
+    Channel 2 (short) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{9.8}{\milli\m} & \SI{0.96}{\milli\m} & \SI{9.41}{\micro\liter} & 190 & 0.20 & \SI{12.7}{\milli\m}\\
+    Channel 2 (long) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.96}{\milli\m} & \SI{15.74}{\micro\liter} & 190 & 0.20 & \SI{12.7}{\milli\m} \\\bottomrule
+\end{tabular}
+\label{tab:val}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{channel2_velocity.pdf}
+    \caption{WSS distribution over height on the side wall and velocity contours for aspect ratio of Channel 2. WSS, velocity, and width are normalized. Velocity and WSS are computed with \cref{eq:velo_rect} and \cref{eq:wss_rect}.}
+    \label{fig:channel2}
+\end{figure}
+
+\subsection{Transmissibility}
+Since the channels have aspect ratios close to $1$, the approximate solution does not give good results and we go with an approximation infinite series expansion, and cut the sum after $10$ terms. Moreover, transmissibilty depends on the fluid viscosity. For velocity measurements at room temperature and culture fluid, we use $\mu_{20} \approx \SI{1}{\milli\pascal\s}$. For wall shear stress calculations at different operating conditions, the temperature is set at \SI{37}{\celsius}, and we use $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$. Therefore, we report here two transmissibility values: $t_{20}$ and $t_{37}$. Recall that flow rate is given by $Q = GLt$ and the mean velocity can be computed by $\bar{v} = Q/(HW)$. Example: for a pressure drop of \SI{100}{\pascal} (upper estimate of what occurs during operation of the platform) over a channel length $L = \SI{20}{\milli\m}$, that is $G = \SI{5000}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.2}{\m\per\s}$ for Channel 2 which is what we assumed as upper limit characteristic velocity in the Reynolds number estimates.
+
+\begin{table}[!htb]
+\caption{Channel transmissibilities for $\mu_{20} \approx \SI{1}{\milli\pascal\s}$ and $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$. The product $tL$ is independent of the channel length and only depends on the cross-sectional dimensions.}
+\centering
+\begin{tabular}{llll}
+\toprule
+                             & $t_{20}$ & $t_{37}$ & unit \\\midrule
+    Channel 1 (short) & \num{3.0664e-9} & \num{3.8330e-9} & \si{\cubic\m\per\pascal\per\s}\\
+    Channel 1 (long) & \num{1.8323e-9} & \num{2.2905e-9} & \si{\cubic\m\per\pascal\per\s} \\\midrule
+    Channel 2 (short) & \num{3.0683e-9} & \num{3.8353e-9} & \si{\cubic\m\per\pascal\per\s}\\
+    Channel 2 (long) & \num{1.8334e-9} & \num{2.2918e-9} & \si{\cubic\m\per\pascal\per\s} \\\bottomrule\toprule
+    & $t_{20}L$ & $t_{37}L$ &  unit \\\midrule
+    Channel 1  & \num{3.0051e-11} & \num{3.7563e-11} & \si{\m\tothe{4}\per\pascal\per\s}  \\
+    Channel 2 & \num{3.0069e-11} & \num{3.7586e-11} & \si{\m\tothe{4}\per\pascal\per\s} \\
+    \bottomrule
+\end{tabular}
+\label{tab:trans_channels}
+\end{table}
+
+\subsection{Maximum wall shear stress}
+The maximum wall shear stress may be more conveniently expressed in terms of the flow rate $Q = GLt \Rightarrow G = Q/(Lt)$, such that it can be computed in a post-processing step from the simulated channel flow rates,
+\begin{align}
+    \text{WSS}^\text{max}_x = \frac{QH}{Lt} \left[ \sum\limits_{k=1}^{\infty} \frac{(-1)^k}{\beta_k^2} \tanh{\beta_k \gamma} \right]. \label{eq:wss_rectq}
+\end{align}
+With values in SI units, $\text{WSS}^\text{max}_x$ is in units of $Pa$ and for reference, we state that $\SI{1}{\pascal} \,\hat{=}\, \num{10}~\text{dyne}\,\text{cm}^{-2}$, a unit often used for wall shear stress. \Cref{fig:channel2} can be used to determine the wall shear stress on the channel side on specific height of the channel given $\text{WSS}^\text{max}_x$.
+Continuing the previous Example: for $G = \SI{5000}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.2}{\m\per\s}$ for Channel 2, thus $Q = \SI{192}{\micro\l\per\s}$. Using the value of \cref{tab:wss_channels}, we obtain $\text{WSS}^\text{max}_{x,37} = \SI{1.49}{\pascal} = \num{14.9}~\text{dyne}\,\text{cm}^{-2}$.
+
+\begin{table}[!htb]
+\caption{Maximum wall shear stress normalized by the channel flow rate $Q$ for $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$.}
+\centering
+\begin{tabular}{lll}
+\toprule
+    & $\text{WSS}^\text{max}_{x,37}/Q$ & unit \\\midrule
+    Channel 1 & \num{4.93e+6} & \si{\m\tothe{-3}\pascal\s}  \\
+    Channel 2 & \num{7.74e+6} & \si{\m\tothe{-3}\pascal\s} \\
+    \bottomrule
+\end{tabular}
+\label{tab:wss_channels}
+\end{table}
+
+\section{Inertial effects}
+Sudden increases in the pressure gradient are possible due to the gyroscopic motion of the platform in interaction with the reservoir geometry. Without inertial forces considered in the model, the flow rate can increase infinitely fast. The model can mostly likely be improved by limiting the flow rate increase per time interval. For example, by adding ad-hoc model of inertia through a flow rate acceleration rate limiter:
+\begin{equation}
+    Q^k = \operatorname{min}(\hat{Q}^k, Q^{k-1} + \epsilon_Q\Delta t_k),
+\end{equation}
+where $\hat{Q}^k$ is the computed flux for the current time step $k$, $Q^{k-1}$ is the flux of the previous time step (and is $0$ for $k=0$), $\Delta t_k$ is the time step size, and $\epsilon_Q$ is an ad-hoc parameter defining the maximum rate of change of the flux (flux acceleration) allowed.
+For a proper PDE-based model of inertia, the channel must be resolved in axial direction by 1D tube flow models. Since the axial velocity changes over the channel length ($\partial_zu_z \neq 0$), nonlinear effects at high Reynolds numbers cannot be neglected anymore.
+
+All inertia effect have been neglected in the present analysis.
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+%\doclicenseThis
+
+\end{document}
