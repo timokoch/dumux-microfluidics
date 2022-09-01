@@ -179,16 +179,16 @@ With values in SI units, $\text{WSS}^\text{max}_x$ is in units of $Pa$ and for r
 Continuing the previous Example: for $G = \SI{5000}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.2}{\m\per\s}$ for Channel 2, thus $Q = \SI{192}{\micro\l\per\s}$. Using the value of \cref{tab:wss_channels}, we obtain $\text{WSS}^\text{max}_{x,37} = \SI{1.49}{\pascal} = \num{14.9}~\text{dyne}\,\text{cm}^{-2}$.
 
 \begin{table}[!htb]
-\caption{Maximum wall shear stress normalized by the channel flow rate $Q$ for $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$.}
-\centering
-\begin{tabular}{lll}
-\toprule
-    & $\text{WSS}^\text{max}_{x,37}/Q$ & unit \\\midrule
-    Channel 1 & \num{4.93e+6} & \si{\m\tothe{-3}\pascal\s}  \\
-    Channel 2 & \num{7.74e+6} & \si{\m\tothe{-3}\pascal\s} \\
-    \bottomrule
-\end{tabular}
-\label{tab:wss_channels}
+    \caption{Maximum wall shear stress normalized by the channel flow rate $Q$ for $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$.}
+    \centering
+    \begin{tabular}{llll}
+    \toprule
+        & $\text{WSS}^\text{max}_{x,20}/Q$ & $\text{WSS}^\text{max}_{x,37}/Q$ & unit \\\midrule
+        Channel 1 & \num{6.17e+06} & \num{4.93e+6} & \si{\m\tothe{-3}\pascal\s}  \\
+        Channel 2 & \num{9.67e+06} & \num{7.74e+6} & \si{\m\tothe{-3}\pascal\s} \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:wss_channels}
 \end{table}
 
 \section{Inertial effects}
