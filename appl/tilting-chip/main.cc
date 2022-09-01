@@ -22,6 +22,7 @@
 #include <vector>
 #include <array>
 #include <tuple>
+#include <limits>
 
 #include <dune/common/timer.hh>
 #include <dune/grid/io/file/vtk.hh>
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
 
     // parameters for ad-hoc model of inertia effects
     // maximum flux change per second
-    const double maxFluxChangePerSecond = Dumux::getParam<double>("Problem.MaxFluxChangePerSecond", 10);
+    const double maxFluxChangePerSecond = Dumux::getParam<double>("Problem.MaxFluxChangePerSecond", std::numeric_limits<double>::max());
     std::array<double, 2> fluxInChannelOld{{0.0, 0.0}};
     std::array<double, 2> fluxInChannel{{0.0, 0.0}};
     std::array<double, 2> fluxInChannelDeriv{{0.0, 0.0}};
