@@ -148,26 +148,26 @@ int main(int argc, char** argv)
         // flow is only happening if the upstream connection is not dry (1)
         if ((diffP[0] > 0.0 && reservoir0State.ch0.isDry()) || (diffP[0] < 0.0 && reservoir1State.ch0.isDry()))
         {
-            std::cout << "Channel (1) stopped by dry upstream inlet" << std::endl;
+            std::cout << "Channel (0) stopped by dry upstream inlet" << std::endl;
             fluxInChannel[0] = 0.0;
         }
         // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition) (2)
         else if ((reservoir1State.ch0.isDry() && diffP[0] > 0.0 && diffP[0] < capillaryStopPressure) || (reservoir0State.ch0.isDry() && diffP[0] < 0.0 && diffP[0] > -capillaryStopPressure))
         {
-            std::cout << "Channel (1) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[0] << std::endl;
+            std::cout << "Channel (0) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[0] << std::endl;
             fluxInChannel[0] = 0.0;
         }
 
         // flow is only happening if the upstream connection is not dry (1)
         if ((diffP[1] > 0.0 && reservoir0State.ch1.isDry()) || (diffP[1] < 0.0 && reservoir1State.ch1.isDry()))
         {
-            std::cout << "Channel (2) stopped by dry upstream inlet" << std::endl;
+            std::cout << "Channel (1) stopped by dry upstream inlet" << std::endl;
             fluxInChannel[1] = 0.0;
         }
         // if the downstream is dry flow only happens if the capillary pressure is overcome (piston-imbibition) (2)
         else if ((reservoir1State.ch1.isDry() && diffP[1] > 0.0 && diffP[1] < capillaryStopPressure) || (reservoir0State.ch1.isDry() && diffP[1] < 0.0 && diffP[1] > -capillaryStopPressure))
         {
-            std::cout << "Channel (2) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[1] << std::endl;
+            std::cout << "Channel (1) stopped by valve pressure: " << capillaryStopPressure << " with ΔP: " << diffP[1] << std::endl;
             fluxInChannel[1] = 0.0;
         }
 
@@ -197,36 +197,47 @@ int main(int argc, char** argv)
 
             bool regularized = regularizeFlux(0);
             if (regularized)
-                std::cout << "Channel (1) regularized flux/dt: " << fluxInChannelDeriv[0] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
+                std::cout << "Channel (0) regularized flux/dt: " << fluxInChannelDeriv[0] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
             regularized = regularizeFlux(1);
             if (regularized)
-                std::cout << "Channel (2) regularized flux/dt: " << fluxInChannelDeriv[1] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
+                std::cout << "Channel (1) regularized flux/dt: " << fluxInChannelDeriv[1] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
         }
 
         // flow from reservoir 0 to reservoir 1 in channel 0 (4)
-        if (fluxInChannel[0] < 0.0 && fluxInChannel[0] < -reservoir0State.ch0.availableFluidVolume()/dt)
+        constexpr double fluxEps = 1e-5;
+        if (fluxInChannel[0] < -fluxEps)
+            std::cout << "Volume available upstream for Channel (0): " << reservoir0State.ch0.availableFluidVolume() << std::endl;
+        else if (fluxInChannel[0] > fluxEps)
+            std::cout << "Volume available upstream for Channel (0): " << reservoir1State.ch0.availableFluidVolume() << std::endl;
+
+        if (fluxInChannel[1] < -fluxEps)
+            std::cout << "Volume available upstream for Channel (1): " << reservoir0State.ch1.availableFluidVolume() << std::endl;
+        else if (fluxInChannel[1] > fluxEps)
+            std::cout << "Volume available upstream for Channel (1): " << reservoir1State.ch1.availableFluidVolume() << std::endl;
+
+        if (fluxInChannel[0] < -fluxEps && fluxInChannel[0] < -reservoir0State.ch0.availableFluidVolume()/dt)
         {
             fluxInChannel[0] = -reservoir0State.ch0.availableFluidVolume()/dt;
-            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
+            std::cout << "Channel (0) flux limited because too little upstream water is available" << std::endl;
         }
         // flow from reservoir 1 to reservoir 0 in channel 0 (4)
-        else if (fluxInChannel[0] > 0.0 && fluxInChannel[0] > reservoir1State.ch0.availableFluidVolume()/dt)
+        else if (fluxInChannel[0] > fluxEps && fluxInChannel[0] > reservoir1State.ch0.availableFluidVolume()/dt)
         {
-            fluxInChannel[0] = -reservoir0State.ch0.availableFluidVolume()/dt;
-            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
+            fluxInChannel[0] = reservoir1State.ch0.availableFluidVolume()/dt;
+            std::cout << "Channel (0) flux limited because too little upstream water is available" << std::endl;
         }
 
         // flow from reservoir 0 to reservoir 1 in channel 1 (4)
-        if (fluxInChannel[1] < 0.0 && fluxInChannel[1] < -reservoir0State.ch1.availableFluidVolume()/dt)
+        if (fluxInChannel[1] < -fluxEps && fluxInChannel[1] < -reservoir0State.ch1.availableFluidVolume()/dt)
         {
             fluxInChannel[1] = -reservoir0State.ch1.availableFluidVolume()/dt;
-            std::cout << "Channel (2) flux limited because too little upstream water is available" << std::endl;
+            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
         }
         // flow from reservoir 1 to reservoir 0 in channel 1 (4)
-        else if (fluxInChannel[1] > 0.0 && fluxInChannel[1] > reservoir1State.ch1.availableFluidVolume()/dt)
+        else if (fluxInChannel[1] > fluxEps && fluxInChannel[1] > reservoir1State.ch1.availableFluidVolume()/dt)
         {
-            fluxInChannel[1] = -reservoir0State.ch1.availableFluidVolume()/dt;
-            std::cout << "Channel (2) flux limited because too little upstream water is available" << std::endl;
+            fluxInChannel[1] = reservoir1State.ch1.availableFluidVolume()/dt;
+            std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
         }
 
         const auto netFluxPredict = fluxInChannel[0] + fluxInChannel[1];
@@ -260,18 +271,18 @@ int main(int argc, char** argv)
         }
 
         if (fluxInChannel[0] < -1e-7)
-            std::cout << "\x1b[31m" << "Channel (1) flow R0 " << std::string(int(std::abs(fluxInChannel[0])), '>') << "> R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s)" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (0) flow R0 " << std::string(int(std::abs(fluxInChannel[0])), '>') << "> R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s, V: " << std::abs(fluxInChannel[0]*dt) <<  " µl)" << "\033[0m" << "\n";
         else if (fluxInChannel[0] > 1e-7)
-            std::cout << "\x1b[31m" << "Channel (1) flow R0 <" << std::string(int(std::abs(fluxInChannel[0])), '<') << " R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s)" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (0) flow R0 <" << std::string(int(std::abs(fluxInChannel[0])), '<') << " R1 (ΔP: " << diffP[0] << " Pa, Q: " << fluxInChannel[0] <<  " µl/s, V: " << std::abs(fluxInChannel[0]*dt) <<  " µl)" << "\033[0m" << "\n";
         else
-            std::cout << "\x1b[31m" << "Channel (1) no flow" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (0) no flow" << "\033[0m" << "\n";
 
         if (fluxInChannel[1] < -1e-7)
-            std::cout << "\x1b[31m" << "Channel (2) flow R0 " << std::string(int(std::abs(fluxInChannel[1])), '>') << "> R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s)" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (1) flow R0 " << std::string(int(std::abs(fluxInChannel[1])), '>') << "> R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s, V: " << std::abs(fluxInChannel[1]*dt) <<  " µl)" << "\033[0m" << "\n";
         else if (fluxInChannel[1] > 1e-7)
-            std::cout << "\x1b[31m" << "Channel (2) flow R0 <" << std::string(int(std::abs(fluxInChannel[1])), '<') << " R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s)" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (1) flow R0 <" << std::string(int(std::abs(fluxInChannel[1])), '<') << " R1 (ΔP: " << diffP[1] << " Pa, Q: " << fluxInChannel[1] <<  " µl/s, V: " << std::abs(fluxInChannel[1]*dt) <<  " µl)" << "\033[0m" << "\n";
         else
-            std::cout << "\x1b[31m" << "Channel (2) no flow" << "\033[0m" << "\n";
+            std::cout << "\x1b[31m" << "Channel (1) no flow" << "\033[0m" << "\n";
 
         volumes[0] += netVolumeExchange;
         volumes[1] -= netVolumeExchange;
