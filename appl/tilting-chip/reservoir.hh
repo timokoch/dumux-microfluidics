@@ -206,9 +206,9 @@ public:
         // water table height is the local variable
         // Brent's method is due to Brent 1971: https://doi.org/10.1093/comjnl/14.4.422
         double h = 0.0;
-        try { h = Dumux::findScalarRootBrent(-11.0, 5.0, residual, 1e-2, 2000); }
+        try { h = Dumux::findScalarRootBrent(-11.0, 5.0, residual, 1e-4, 2000); }
         catch (const Dune::InvalidStateException& e)
-        { h = Dumux::findScalarRootBrent(-11.1, 5.1, residual, 1e-2, 2000); }
+        { h = Dumux::findScalarRootBrent(-11.1, 5.1, residual, 1e-4, 2000); }
 
         // store the resulting volume and intersections
         // (each application of "residual" stores the intersections as side effect)
