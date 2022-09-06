@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     // initial conditions
     const auto reservoirVolume = reservoir.volume();
     const auto initialVolume = Dumux::getParam<double>("Problem.InitialVolumeInMicroLiter", 300.0);
-    const auto channelVolume = Dumux::getParam<double>("Problem.SingleChannelVolumeInMicroLiter", 16.735);
+    const auto channelVolume = 0.0; // Consider the channels always filled
     std::cout << "Initial reservoirVolume (µl): " << initialVolume << ", channel reservoirVolume (µl): " << channelVolume << std::endl;
     if (auto maxV = 2*channelVolume + 2*reservoirVolume; initialVolume > maxV)
         DUNE_THROW(Dune::IOError, "The maximum volume this chip can fit is " << maxV << " µl");
@@ -91,11 +91,9 @@ int main(int argc, char** argv)
     const auto dt = Dumux::getParam<double>("TimeLoop.Dt", tEnd/cycles/stepsPerCycle);
     auto timeLoop = std::make_shared<Dumux::TimeLoop<double>>(0.0, dt, tEnd);
 
-    timeLoop->start(); do
+    // One time step kernel
+    auto evolve = [&](const double dt, const double curTime, std::size_t timeStepIndex, bool writeOutput = true)
     {
-        const auto curTime = timeLoop->time();
-        const auto timeStepIndex = timeLoop->timeStepIndex();
-
         // compute current rotation angles of the platform
         double beta = 0.0, gamma = 0.0;
         std::tie(beta, gamma) = motionFunction->rotationAngles(curTime);
@@ -119,7 +117,6 @@ int main(int argc, char** argv)
         // Update volumes using pressure gradients and channel resistance (and convert to μl/s)
         fluxInChannel[0] = -1e9*diffP[0]*channelTransmissibility;
         fluxInChannel[1] = -1e9*diffP[1]*channelTransmissibility;
-        const auto dt = timeLoop->timeStepSize();
 
         ////////////////////////////////////////////////////////////////////////////////
         // Flux limiters ///////////////////////////////////////////////////////////////
@@ -288,20 +285,49 @@ int main(int argc, char** argv)
         volumes[1] -= netVolumeExchange;
 
         std::cout << "Time: " << curTime << std::endl;
-        output << curTime << " "
-               << volumes[0] + volumes[1] + 2*channelVolume << " "
-               << volumes[0] << " "
-               << volumes[1] << " "
-               << fluxInChannel[0] << " "
-               << fluxInChannel[1] << " "
-               << std::abs(fluxInChannel[0]*1e-9*channelWSSFactor) << " "
-               << std::abs(fluxInChannel[1]*1e-9*channelWSSFactor) << " "
-               << beta << " "
-               << gamma
-               << std::endl;
+
+        if (writeOutput)
+        {
+            output << curTime << " "
+                << volumes[0] + volumes[1] + 2*channelVolume << " "
+                << volumes[0] << " "
+                << volumes[1] << " "
+                << fluxInChannel[0] << " "
+                << fluxInChannel[1] << " "
+                << std::abs(fluxInChannel[0]*1e-9*channelWSSFactor) << " "
+                << std::abs(fluxInChannel[1]*1e-9*channelWSSFactor) << " "
+                << beta << " "
+                << gamma
+                << std::endl;
+        }
 
         // update for inertia model so we can compute the rate of change of the flux
         fluxInChannelOld = fluxInChannel;
+    };
+
+
+    // Initialization phase > Simulate until water is in equilibrium and the flux is zero
+    auto oldVolumes = volumes;
+    while (true)
+    {
+        const auto dt = timeLoop->timeStepSize();
+        evolve(dt, 0.0, 0, false);
+
+        if (std::abs(oldVolumes[0] - volumes[0]) < 0.01)
+            break;
+
+        oldVolumes = volumes;
+    }
+
+    // Actual simulation
+    timeLoop->start(); do
+    {
+        const auto curTime = timeLoop->time();
+        const auto timeStepIndex = timeLoop->timeStepIndex();
+        const auto dt = timeLoop->timeStepSize();
+
+        // do one time step
+        evolve(dt, curTime, timeStepIndex, true);
 
         // go to next time step
         timeLoop->advanceTimeStep();
