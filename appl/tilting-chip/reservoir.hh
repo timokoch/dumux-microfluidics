@@ -262,7 +262,7 @@ private:
         );
 
         // compute volume and bounding box
-        Point lowerLeft{1e100}, upperRight{-1e100};
+        Point lowerLeft(1e100), upperRight(-1e100);
         for (const auto& element : elements(gridView))
         {
             const auto geometry = element.geometry();
