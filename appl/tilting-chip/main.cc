@@ -61,6 +61,11 @@ int main(int argc, char** argv)
 
     // m^3/(s*Pa)
     const auto channelTransmissibility = Dumux::getParam<double>("Problem.ChannelTransmissibility");
+    const auto channelLength = Dumux::getParam<double>("Problem.ChannelLengthInMeter");
+    const auto density = Dumux::getParam<double>("Problem.Density", 1000.0);
+    const auto channelCrossSectionArea = Dumux::getParam<double>("Problem.ChannelAreaInSquareMeter");
+    const auto zeta = channelTransmissibility*channelLength*density/channelCrossSectionArea;
+
     // max(WSSx)/Q, conversion factor from flow rate to velocity (this is a constant for laminar flow)
     const auto channelWSSFactor = Dumux::getParam<double>("Problem.ChannelWSSFactor");
 
@@ -92,7 +97,7 @@ int main(int argc, char** argv)
     auto timeLoop = std::make_shared<Dumux::TimeLoop<double>>(0.0, dt, tEnd);
 
     // One time step kernel
-    auto evolve = [&](const double dt, const double curTime, std::size_t timeStepIndex, bool writeOutput = true)
+    auto evolve = [&](const double dt, const double curTime, std::size_t timeStepIndex, const double zeta, bool writeOutput = true)
     {
         // compute current rotation angles of the platform
         double beta = 0.0, gamma = 0.0;
@@ -115,8 +120,11 @@ int main(int argc, char** argv)
         }};
 
         // Update volumes using pressure gradients and channel resistance (and convert to μl/s)
-        fluxInChannel[0] = -1e9*diffP[0]*channelTransmissibility;
-        fluxInChannel[1] = -1e9*diffP[1]*channelTransmissibility;
+        // under consideration of inertia
+        const auto GLT0 = -1e9*diffP[0]*channelTransmissibility;
+        const auto GLT1 = -1e9*diffP[1]*channelTransmissibility;
+        fluxInChannel[0] = (fluxInChannelOld[0]*zeta + dt*GLT0)/(zeta + dt);
+        fluxInChannel[1] = (fluxInChannelOld[1]*zeta + dt*GLT0)/(zeta + dt);
 
         ////////////////////////////////////////////////////////////////////////////////
         // Flux limiters ///////////////////////////////////////////////////////////////
@@ -131,13 +139,10 @@ int main(int argc, char** argv)
         //     for imbibition of the reservoir (water wants to rather stay in the narrow channel
         //     minimizing liquid-gas interface curvature) so that flow occurs.
         //
-        // (3) The flow rate cannot change infinitely fast (inertia). We prescribe a constant
-        //     maximum value by which the flow rate can change per second.
-        //
-        // (4) The maximum amount that can flow in this time step is limited by the available
+        // (3) The maximum amount that can flow in this time step is limited by the available
         //     and connected upstream water body volume
         //
-        // (5) The maximum amount that can flow in this time step is limited by the available
+        // (4) The maximum amount that can flow in this time step is limited by the available
         //     space in the downstream reservoir (no overflow)
         //
         //////////////////////////////////////////////////////////////////////////////////
@@ -168,39 +173,7 @@ int main(int argc, char** argv)
             fluxInChannel[1] = 0.0;
         }
 
-        // check that the flux doesn't grow too much per time (ad-hoc inertia model) (3)
-        {
-            fluxInChannelDeriv[0] = (fluxInChannel[0] - fluxInChannelOld[0])/dt;
-            fluxInChannelDeriv[1] = (fluxInChannel[1] - fluxInChannelOld[1])/dt;
-            const auto regularizeFlux = [&](int i){
-                if (fluxInChannel[i] > 0 && fluxInChannelDeriv[i] > 0)
-                {
-                    if (fluxInChannelDeriv[i] > maxFluxChangePerSecond)
-                    {
-                        fluxInChannel[i] = fluxInChannelOld[i] + dt*maxFluxChangePerSecond;
-                        return true;
-                    }
-                }
-                else if (fluxInChannel[i] < 0 && fluxInChannelDeriv[i] < 0)
-                {
-                    if (fluxInChannelDeriv[i] < -maxFluxChangePerSecond)
-                    {
-                        fluxInChannel[i] = fluxInChannelOld[i] - dt*maxFluxChangePerSecond;
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            bool regularized = regularizeFlux(0);
-            if (regularized)
-                std::cout << "Channel (0) regularized flux/dt: " << fluxInChannelDeriv[0] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
-            regularized = regularizeFlux(1);
-            if (regularized)
-                std::cout << "Channel (1) regularized flux/dt: " << fluxInChannelDeriv[1] << " max: " << maxFluxChangePerSecond << " µl/s^2" << std::endl;
-        }
-
-        // flow from reservoir 0 to reservoir 1 in channel 0 (4)
+        // flow from reservoir 0 to reservoir 1 in channel 0 (3)
         constexpr double fluxEps = 1e-5;
         if (fluxInChannel[0] < -fluxEps)
             std::cout << "Volume available upstream for Channel (0): " << reservoir0State.ch0.availableFluidVolume() << std::endl;
@@ -217,20 +190,20 @@ int main(int argc, char** argv)
             fluxInChannel[0] = -reservoir0State.ch0.availableFluidVolume()/dt;
             std::cout << "Channel (0) flux limited because too little upstream water is available" << std::endl;
         }
-        // flow from reservoir 1 to reservoir 0 in channel 0 (4)
+        // flow from reservoir 1 to reservoir 0 in channel 0 (3)
         else if (fluxInChannel[0] > fluxEps && fluxInChannel[0] > reservoir1State.ch0.availableFluidVolume()/dt)
         {
             fluxInChannel[0] = reservoir1State.ch0.availableFluidVolume()/dt;
             std::cout << "Channel (0) flux limited because too little upstream water is available" << std::endl;
         }
 
-        // flow from reservoir 0 to reservoir 1 in channel 1 (4)
+        // flow from reservoir 0 to reservoir 1 in channel 1 (3)
         if (fluxInChannel[1] < -fluxEps && fluxInChannel[1] < -reservoir0State.ch1.availableFluidVolume()/dt)
         {
             fluxInChannel[1] = -reservoir0State.ch1.availableFluidVolume()/dt;
             std::cout << "Channel (1) flux limited because too little upstream water is available" << std::endl;
         }
-        // flow from reservoir 1 to reservoir 0 in channel 1 (4)
+        // flow from reservoir 1 to reservoir 0 in channel 1 (3)
         else if (fluxInChannel[1] > fluxEps && fluxInChannel[1] > reservoir1State.ch1.availableFluidVolume()/dt)
         {
             fluxInChannel[1] = reservoir1State.ch1.availableFluidVolume()/dt;
@@ -238,7 +211,7 @@ int main(int argc, char** argv)
         }
 
         const auto netFluxPredict = fluxInChannel[0] + fluxInChannel[1];
-        // make sure only as much flows as is actually there; (4) and (5)
+        // make sure only as much flows as is actually there; (3) and (4)
         const auto predictedNetVolumeExchange = netFluxPredict*timeLoop->timeStepSize();
         const auto netVolumeExchange = std::clamp(predictedNetVolumeExchange,
             // minimum is constrained by what's left in reservoirVolume 0 or can be added to reservoirVolume 1
@@ -311,7 +284,9 @@ int main(int argc, char** argv)
     while (true)
     {
         const auto dt = timeLoop->timeStepSize();
-        evolve(dt, 0.0, 0, false);
+
+        // stay at starting time and neglect inertial effects (we want to get there fast)
+        evolve(dt, 0.0, 0, 0.0, false);
 
         if (std::abs(oldVolumes[0] - volumes[0]) < 0.01)
             break;
@@ -327,7 +302,7 @@ int main(int argc, char** argv)
         const auto dt = timeLoop->timeStepSize();
 
         // do one time step
-        evolve(dt, curTime, timeStepIndex, true);
+        evolve(dt, curTime, timeStepIndex, zeta, true);
 
         // go to next time step
         timeLoop->advanceTimeStep();

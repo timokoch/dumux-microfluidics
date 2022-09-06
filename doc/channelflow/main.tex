@@ -129,15 +129,15 @@ where $\Phi$ depends on the (inverse) aspect ratio $\gamma^{-1} = H/W$ of the ch
 \section{Channels in this work}
 The channel dimensions and characteristics numbers of given in \cref{tab:val}. We estimate the largest flow velocities to be about \SI{0.2}{\m\per\s}. The frequency $\omega$ is given by the rotation frequency, and an upper bound in practical applications is $\omega = \SI{0.17}{\per\s}$ ($10$~rpm). The flow is therefore expected to be laminar in these channels (one of the assumptions for the derivation of the channel transmissibility). Transient effects are expected to \emph{not} play a significant role for the velocity profiles (this concerns mostly inertia effect close to the boundary of the channel). The entry length is relatively large so that the flow is only fully developed in the middle of the channel. This means we make some error in the transmissibility estimate at large velocities, however, this is expected to be less significant than other effects, e.g. capillary effects at the channel entrance. Since, we are interested in wall shear stress (WSS) in the middle of the domain where most of the cells are growing, we expect WSS estimates in the middle of the channel to be sufficiently accurate for the presented analysis.
 \begin{table}[!htb]
-\caption{Channel dimensions and characteristic numbers for the rectangular cross-section channels analysed with the mathematical model in this work. Reynolds number, $\text{Re}$, Womersley number $\text{Wo}$, and hydrodynamic entry length, $L_e$, are estimates based on a characteristic velocity of $V = \SI{0.2}{\m\per\s}$ and frequency $\omega = \SI{0.17}{\per\s}$ which are at the upper end of expected values.}
+\caption{Channel dimensions and characteristic numbers for the rectangular cross-section channels analysed with the mathematical model in this work. Reynolds number, $\text{Re}$, Womersley number $\text{Wo}$, and hydrodynamic entry length, $L_e$, are estimates based on the maximal velocities observed in the simulations ($V_{C1s} = \SI{0.1}{\m\per\s}$, $V_{C1l} = \SI{0.12}{\m\per\s}$, $V_{C2s} = \SI{0.1}{\m\per\s}$, $V_{C2l} = \SI{0.12}{\m\per\s}$) and frequency $\omega = \SI{0.17}{\per\s}$ which are at the upper end of expected values, and $\rho = \SI{1e3}{\kg\per\cubic\m}$, $\mu = \SI{1e-3}{\pascal\s}$.}
 \centering
 \begin{tabular}{lllllllll}
 \toprule
                              & $H$ & $W$ & $L$ & $D_\text{hy}$ & $H\times W\times L$ & $\text{Re}_\text{max}$  & $\text{Wo}_\text{max}$ & $L_{e,\text{max}}$ \\\midrule
-    Channel 1 (short) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{9.8}{\milli\m}  & \SI{0.86}{\milli\m} & \SI{15.68}{\micro\liter} & 170 & 0.18 & \SI{3.7}{\milli\m} \\
-    Channel 1 (long) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.86}{\milli\m} & \SI{26.24}{\micro\liter} & 170 & 0.18 & \SI{3.7}{\milli\m}\\\midrule
-    Channel 2 (short) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{9.8}{\milli\m} & \SI{0.96}{\milli\m} & \SI{9.41}{\micro\liter} & 190 & 0.20 & \SI{12.7}{\milli\m}\\
-    Channel 2 (long) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.96}{\milli\m} & \SI{15.74}{\micro\liter} & 190 & 0.20 & \SI{12.7}{\milli\m} \\\bottomrule
+    Channel 1 (short) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{9.8}{\milli\m}  & \SI{0.86}{\milli\m} & \SI{15.68}{\micro\liter} & 85 & 0.18 & \SI{1.8}{\milli\m} \\
+    Channel 1 (long) & \SI{0.5}{\milli\m} & \SI{3.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.86}{\milli\m} & \SI{26.24}{\micro\liter} & 100 & 0.18 & \SI{2.2}{\milli\m}\\\midrule
+    Channel 2 (short) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{9.8}{\milli\m} & \SI{0.96}{\milli\m} & \SI{9.41}{\micro\liter} & 100 & 0.20 & \SI{6.7}{\milli\m}\\
+    Channel 2 (long) & \SI{0.8}{\milli\m} & \SI{1.2}{\milli\m} & \SI{16.4}{\milli\m} & \SI{0.96}{\milli\m} & \SI{15.74}{\micro\liter} & 115 & 0.20 & \SI{7.7}{\milli\m} \\\bottomrule
 \end{tabular}
 \label{tab:val}
 \end{table}
@@ -150,7 +150,7 @@ The channel dimensions and characteristics numbers of given in \cref{tab:val}. W
 \end{figure}
 
 \subsection{Transmissibility}
-Since the channels have aspect ratios close to $1$, the approximate solution does not give good results and we go with an approximation infinite series expansion, and cut the sum after $10$ terms. Moreover, transmissibilty depends on the fluid viscosity. For velocity measurements at room temperature and culture fluid, we use $\mu_{20} \approx \SI{1}{\milli\pascal\s}$. For wall shear stress calculations at different operating conditions, the temperature is set at \SI{37}{\celsius}, and we use $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$. Therefore, we report here two transmissibility values: $t_{20}$ and $t_{37}$. Recall that flow rate is given by $Q = GLt$ and the mean velocity can be computed by $\bar{v} = Q/(HW)$. Example: for a pressure drop of \SI{100}{\pascal} (upper estimate of what occurs during operation of the platform) over a channel length $L = \SI{20}{\milli\m}$, that is $G = \SI{5000}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.2}{\m\per\s}$ for Channel 2 which is what we assumed as upper limit characteristic velocity in the Reynolds number estimates.
+Since the channels have aspect ratios close to $1$, the approximate solution does not give good results and we go with an approximation infinite series expansion, and cut the sum after $10$ terms. Moreover, transmissibilty depends on the fluid viscosity. For velocity measurements at room temperature and culture fluid, we use $\mu_{20} \approx \SI{1}{\milli\pascal\s}$. For wall shear stress calculations at different operating conditions, the temperature is set at \SI{37}{\celsius}, and we use $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$. Therefore, we report here two transmissibility values: $t_{20}$ and $t_{37}$. Recall that flow rate is given by $Q = GLt$ and the mean velocity can be computed by $\bar{v} = Q/(HW)$. Example: for a pressure drop of \SI{50}{\pascal} (upper estimate of what occurs during operation of the platform) over a channel length $L = \SI{20}{\milli\m}$, that is $G = \SI{2500}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.1}{\m\per\s}$ for Channel 2 (long) which is what we assumed as upper limit characteristic velocity in the Reynolds number estimates.
 
 \begin{table}[!htb]
 \caption{Channel transmissibilities for $\mu_{20} \approx \SI{1}{\milli\pascal\s}$ and $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$. The product $tL$ is independent of the channel length and only depends on the cross-sectional dimensions.}
@@ -176,30 +176,54 @@ The maximum wall shear stress may be more conveniently expressed in terms of the
     \text{WSS}^\text{max}_x = \frac{QH}{Lt} \left[ \sum\limits_{k=1}^{\infty} \frac{(-1)^k}{\beta_k^2} \tanh{\beta_k \gamma} \right]. \label{eq:wss_rectq}
 \end{align}
 With values in SI units, $\text{WSS}^\text{max}_x$ is in units of $Pa$ and for reference, we state that $\SI{1}{\pascal} \,\hat{=}\, \num{10}~\text{dyne}\,\text{cm}^{-2}$, a unit often used for wall shear stress. \Cref{fig:channel2} can be used to determine the wall shear stress on the channel side on specific height of the channel given $\text{WSS}^\text{max}_x$.
-Continuing the previous Example: for $G = \SI{5000}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.2}{\m\per\s}$ for Channel 2, thus $Q = \SI{192}{\micro\l\per\s}$. Using the value of \cref{tab:wss_channels}, we obtain $\text{WSS}^\text{max}_{x,37} = \SI{1.49}{\pascal} = \num{14.9}~\text{dyne}\,\text{cm}^{-2}$.
+Continuing the previous Example: for $G = \SI{2500}{\pascal\per\m}$, and $\mu = \mu_{37}$ we have $\bar{v} = \SI{0.1}{\m\per\s}$ for Channel 2, thus $Q = \SI{95}{\micro\l\per\s}$. Using the value of \cref{tab:wss_channels}, we obtain $\text{WSS}^\text{max}_{x,37} = \SI{0.74}{\pascal} = \num{7.4}~\text{dyne}\,\text{cm}^{-2}$.
 
 \begin{table}[!htb]
-    \caption{Maximum wall shear stress normalized by the channel flow rate $Q$ for $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$.}
-    \centering
-    \begin{tabular}{llll}
-    \toprule
-        & $\text{WSS}^\text{max}_{x,20}/Q$ & $\text{WSS}^\text{max}_{x,37}/Q$ & unit \\\midrule
-        Channel 1 & \num{6.17e+06} & \num{4.93e+6} & \si{\m\tothe{-3}\pascal\s}  \\
-        Channel 2 & \num{9.67e+06} & \num{7.74e+6} & \si{\m\tothe{-3}\pascal\s} \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:wss_channels}
+\caption{Maximum wall shear stress normalized by the channel flow rate $Q$ for $\mu_{37} \approx \SI{0.8}{\milli\pascal\s}$.}
+\centering
+\begin{tabular}{llll}
+\toprule
+    & $\text{WSS}^\text{max}_{x,20}/Q$ & $\text{WSS}^\text{max}_{x,37}/Q$ & unit \\\midrule
+    Channel 1 & \num{6.17e+06} & \num{4.93e+6} & \si{\m\tothe{-3}\pascal\s}  \\
+    Channel 2 & \num{9.67e+06} & \num{7.74e+6} & \si{\m\tothe{-3}\pascal\s} \\
+    \bottomrule
+\end{tabular}
+\label{tab:wss_channels}
 \end{table}
 
 \section{Inertial effects}
-Sudden increases in the pressure gradient are possible due to the gyroscopic motion of the platform in interaction with the reservoir geometry. Without inertial forces considered in the model, the flow rate can increase infinitely fast. The model can mostly likely be improved by limiting the flow rate increase per time interval. For example, by adding ad-hoc model of inertia through a flow rate acceleration rate limiter:
-\begin{equation}
-    Q^k = \operatorname{min}(\hat{Q}^k, Q^{k-1} + \epsilon_Q\Delta t_k),
-\end{equation}
-where $\hat{Q}^k$ is the computed flux for the current time step $k$, $Q^{k-1}$ is the flux of the previous time step (and is $0$ for $k=0$), $\Delta t_k$ is the time step size, and $\epsilon_Q$ is an ad-hoc parameter defining the maximum rate of change of the flux (flux acceleration) allowed.
-For a proper PDE-based model of inertia, the channel must be resolved in axial direction by 1D tube flow models. Since the axial velocity changes over the channel length ($\partial_zu_z \neq 0$), nonlinear effects at high Reynolds numbers cannot be neglected anymore.
+Sudden increases in the pressure gradient are possible due to the gyroscopic motion of the platform in interaction with the reservoir geometry. Without inertial forces considered in the model, the flow rate can increase infinitely fast. Continuing to assume fully-developed velocity profiles at all times, we can still account for inertial forces needed to accelerate the fluid mass. The assumption on the velocity profile allows us to derived from \cref{eq:ns} a one-dimensional model, in form of a momentum and a mass balance (see e.g.\cite{Formaggia2003}),
+\begin{align}
+    \rho\frac{\partial{Q}}{\partial t} + A \frac{\partial p}{\partial z} + \frac{\rho \lambda}{A} Q = 0,\\
+    \rho\frac{\partial{Q}}{\partial z} = 0,
+\end{align}
+with the cross-sectional area of the channel, $A := HW$, and a friction coefficient $\lambda$.
+For stationary fully-developed pressure-driven flow ($Q = \text{const.}$), we have
+\begin{align}
+    -\frac{\partial p}{\partial z} = G = \frac{\rho \lambda}{A^2} Q,
+\end{align}
+and we identify $\rho \lambda A^{-2} \equiv (tL)^{-1}$. Thus we obtain from the momentum balance of the whole channel,
+\begin{align}
+    \frac{\rho}{A} \frac{\partial{Q}}{\partial t} - G + \frac{1}{tL} Q = 0.
+\end{align}
+We then continue to discretize in time using an backward Euler scheme for a given pressure gradient $G$,
+\begin{align}
+    \frac{\rho}{A} \frac{Q^{k+1} - Q^{k}}{\Delta t} - G + \frac{1}{tL} Q^{k+1} = 0,
+\end{align}
+where $\Delta t$ denotes the discrete time step size. Resolving for the flow rate $Q^{k+1}$ at the current time and defining $\zeta := \rho t L A^{-1}$ (in units of seconds), yields with
+\begin{align}
+    Q^{k+1} = \frac{\zeta Q^k + \Delta t GLt}{\zeta + \Delta t},
+\end{align}
+an explicit update for the flow rate in terms the flow rate of the previous time step $Q^k$ and the pressure gradient. Note that we always start simulations with with equilibrium conditions such that $Q^0 \equiv 0$. The equilibrium condition can be obtained by running the simulation with $\zeta = 0$ until $Q^{k+1} - Q^k < \epsilon$, while keeping the platform in the initial position.
 
-All inertia effect have been neglected in the present analysis.
+%The model can mostly likely be improved by limiting the flow rate increase per time interval. For example, by adding ad-hoc model of inertia through a flow rate acceleration rate limiter:
+%\begin{equation}
+%    Q^k = \operatorname{min}(\hat{Q}^k, Q^{k-1} + \epsilon_Q\Delta t_k),
+%\end{equation}
+%where $\hat{Q}^k$ is the computed flux for the current time step $k$, $Q^{k-1}$ is the flux of the previous time step (and is $0$ for $k=0$), $\Delta t_k$ is the time step size, and $\epsilon_Q$ is an ad-hoc parameter defining the maximum rate of change of the flux (flux acceleration) allowed.
+%For a proper PDE-based model of inertia, the channel must be resolved in axial direction by 1D tube flow models. Since the axial velocity changes over the channel length ($\partial_zu_z \neq 0$), nonlinear effects at high Reynolds numbers cannot be neglected anymore.
+
+%All inertia effect have been neglected in the present analysis.
 
 \bibliographystyle{plainnat}
 \bibliography{main}

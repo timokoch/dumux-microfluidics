@@ -20,21 +20,29 @@ SMALL_RESERVOIR = {
 HIGH_ASPECT_RATIO_CHANNEL_LONG = {
     "Problem.DryingThresholdInMilliMeter": "0.7",
     "Problem.SingleChannelVolumeInMicroLiter": "26.24",
+    "Problem.ChannelLengthInMeter": "16.4e-3",
+    "Problem.ChannelAreaInSquareMeter": str(3.2*0.5e-6),
 }
 
 HIGH_ASPECT_RATIO_CHANNEL_SHORT = {
     "Problem.DryingThresholdInMilliMeter": "0.7",
     "Problem.SingleChannelVolumeInMicroLiter": "15.68",
+    "Problem.ChannelLengthInMeter": "9.8e-3",
+    "Problem.ChannelAreaInSquareMeter": str(3.2*0.5e-6),
 }
 
 LOW_ASPECT_RATIO_CHANNEL_LONG = {
     "Problem.DryingThresholdInMilliMeter": "0.5",
-    "Problem.SingleChannelVolumeInMicroLiter": "15.74"
+    "Problem.SingleChannelVolumeInMicroLiter": "15.74",
+    "Problem.ChannelLengthInMeter": "16.4e-3",
+    "Problem.ChannelAreaInSquareMeter": str(1.2*0.8e-6),
 }
 
 LOW_ASPECT_RATIO_CHANNEL_SHORT = {
     "Problem.DryingThresholdInMilliMeter": "0.5",
-    "Problem.SingleChannelVolumeInMicroLiter": "9.41"
+    "Problem.SingleChannelVolumeInMicroLiter": "9.41",
+    "Problem.ChannelLengthInMeter": "9.8e-3",
+    "Problem.ChannelAreaInSquareMeter": str(1.2*0.8e-6),
 }
 
 BIG_RESERVOIR_HIGH_ASPECT_CHANNEL = {
