@@ -76,7 +76,7 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
 
     std::cout << "========================================================================" << std::endl;
     std::cout << "Reservoir " << reservoirIdx << ": optimized reservoirVolume at " << fluidBody.volume << " μl (target: " << fluidVolume << " µl)" << std::endl;
-    std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
+    // std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
 
     // for visualization write out the fluid body geometry
     //Dumux::writeIntersections<Point>(fluidBody.triangulation, outputName);
@@ -116,10 +116,10 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
     std::cout << "Total pressure:     " << p0 << ", " << p1 << " Pa" << std::endl;
     std::cout << "========================================================================" << std::endl;
 
-    {
-        std::ofstream metaData(outputName + ".txt");
-        metaData << Dumux::Fmt::format("{} {} {} {} {} {} {}\n", angle[0], angle[1], fluidVolume, p0, p1, dry0, dry1);
-    }
+    // {
+    //     std::ofstream metaData(outputName + ".txt");
+    //     metaData << Dumux::Fmt::format("{} {} {} {} {} {} {}\n", angle[0], angle[1], fluidVolume, p0, p1, dry0, dry1);
+    // }
 
     struct ReservoirChannels { ChannelState ch0; ChannelState ch1; };
     return ReservoirChannels{ ChannelState{ p0, vol0, dry0 }, ChannelState{ p1, vol1, dry1 } };
