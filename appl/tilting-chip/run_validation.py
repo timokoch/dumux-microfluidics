@@ -2,6 +2,7 @@
 
 import subprocess
 import params
+import itertools
 import multiprocessing as mp
 from params import make_cmd
 
@@ -10,17 +11,32 @@ from params import make_cmd
 tilting_speeds = ["3", "5", "8"]
 # we test for different critical pressures
 # to investigate the influence of the stop valve effect
-crit_pressures = ["20", "25", "30", "35", "40"]
+#crit_pressures = ["0", "10", "20", "40"]
+crit_pressures = ["30",]
+t_factor = [2,]
+vol = [200, 250, 300,]
 
-def run_validation_case(crit_pressure):
+cases = [
+    tilting_speeds,
+    crit_pressures,
+    t_factor,
+    vol,
+]
+
+def run_case(case):
+    speed, crit_pressure, tf, vol = case
+
     args = params.DEFAULT_CASE_VALIDATION
     args["Problem.CapillaryStopPressure"] = crit_pressure
+    dryingT = 500.0 # micron
+    args["Problem.DryingThresholdInMilliMeter"] = f"{dryingT/1000.0}"
+    args["Problem.RotationsPerMinute"] = speed
+    args["Problem.ChannelTransmissibility"] = str(float(tf)*float(args["Problem.ChannelTransmissibility"]))
+    args["Problem.InitialVolumeInMicroLiter"] = str(vol)
 
-    for speed in tilting_speeds:
-        args["Problem.RotationsPerMinute"] = speed
-        cmd = make_cmd(args, f"s{speed}_p{crit_pressure}_300_big.txt")
-        subprocess.run(cmd)
+    cmd = make_cmd(args, f"validation_s{speed}_p{crit_pressure}_d{int(dryingT)}_{vol}ul_t{tf}_big.txt")
+    subprocess.run(cmd)
 
 if __name__ == '__main__':
-    with mp.Pool(len(crit_pressures)) as p:
-        p.map(run_validation_case, crit_pressures)
+    with mp.Pool(8) as p:
+        p.map(run_case, itertools.product(*cases))
