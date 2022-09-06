@@ -98,7 +98,8 @@ TRANSMISSIBILITY_37_DEGREE = {
 DEFAULT_KINETIC = {
     "Problem.RotationsPerMinute": "3",
     "Problem.Angle": "19.0",
-    "TimeLoop.Cycles": "2",
+    "TimeLoop.Cycles": "1",
+    "TimeLoop.Dt": "0.1",
 }
 
 DEFAULT_FLUX_LIMITER = {
