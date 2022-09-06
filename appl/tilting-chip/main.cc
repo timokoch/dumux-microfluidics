@@ -65,6 +65,9 @@ int main(int argc, char** argv)
     const auto density = Dumux::getParam<double>("Problem.Density", 1000.0);
     const auto channelCrossSectionArea = Dumux::getParam<double>("Problem.ChannelAreaInSquareMeter");
     const auto zeta = channelTransmissibility*channelLength*density/channelCrossSectionArea;
+    std::cout << "Inertial time-scale zeta (s): " << zeta << std::endl;
+    std::array<double, 2> fluxInChannelOld{{0.0, 0.0}};
+    std::array<double, 2> fluxInChannel{{0.0, 0.0}};
 
     // max(WSSx)/Q, conversion factor from flow rate to velocity (this is a constant for laminar flow)
     const auto channelWSSFactor = Dumux::getParam<double>("Problem.ChannelWSSFactor");
@@ -73,13 +76,6 @@ int main(int argc, char** argv)
     const auto outputFileName = Dumux::getParam<std::string>("Problem.OutputFileName", "output.txt");
     std::ofstream output(outputFileName);
     output << "Time[s] volTotal[μl] volA[μl] volB[μl] flux_ch0[μl/s] flux_ch1[μl/s] max_wss_ch0[Pa] max_wss_ch1[Pa] beta[rad] gamma[rad]\n";
-
-    // parameters for ad-hoc model of inertia effects
-    // maximum flux change per second
-    const double maxFluxChangePerSecond = Dumux::getParam<double>("Problem.MaxFluxChangePerSecond", std::numeric_limits<double>::max());
-    std::array<double, 2> fluxInChannelOld{{0.0, 0.0}};
-    std::array<double, 2> fluxInChannel{{0.0, 0.0}};
-    std::array<double, 2> fluxInChannelDeriv{{0.0, 0.0}};
 
     // parameter for the ad-hoc "capillary stop valve" model
     const double capillaryStopPressure = Dumux::getParam<double>("Problem.CapillaryStopPressure");
@@ -124,7 +120,7 @@ int main(int argc, char** argv)
         const auto GLT0 = -1e9*diffP[0]*channelTransmissibility;
         const auto GLT1 = -1e9*diffP[1]*channelTransmissibility;
         fluxInChannel[0] = (fluxInChannelOld[0]*zeta + dt*GLT0)/(zeta + dt);
-        fluxInChannel[1] = (fluxInChannelOld[1]*zeta + dt*GLT0)/(zeta + dt);
+        fluxInChannel[1] = (fluxInChannelOld[1]*zeta + dt*GLT1)/(zeta + dt);
 
         ////////////////////////////////////////////////////////////////////////////////
         // Flux limiters ///////////////////////////////////////////////////////////////
