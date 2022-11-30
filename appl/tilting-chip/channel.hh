@@ -65,12 +65,14 @@ private:
 // we assume that there are two channels
 // the channel inlet/outlet position is given by the parameters
 // "Problem.MeasurementPoint1"/"Problem.MeasurementPoint2" in the input file
-auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
-                          const std::array<double, 2>& angle,
-                          double fluidVolume,
-                          int timeStepIndex,
-                          int reservoirIdx,
-                          bool writeOutput)
+auto computeChannelStates(
+    const Microfluidic::Reservoir& reservoir,
+    const std::array<double, 2>& angle,
+    double fluidVolume,
+    int timeStepIndex,
+    int reservoirIdx,
+    bool writeOutput
+)
 {
     // compute the fluid body at the given rotation angles and current fluid volume
     const auto fluidBody = reservoir.computeFluidBody(angle, fluidVolume);
