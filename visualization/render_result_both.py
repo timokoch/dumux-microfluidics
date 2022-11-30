@@ -16,6 +16,11 @@ channel0 = LegacyVTKReader(
     FileNames=[path + "channel_big.vtk"]
 )
 
+channel0s = LegacyVTKReader(
+    registrationName='channel0s',
+    FileNames=[path + "channel_small.vtk"]
+)
+
 data_base_path_big = "/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/appl/tilting-chip/big/"
 data_base_path_small = "/Users/pumbaa/dune-master/dumux-microfluidic/build-cmake/appl/tilting-chip/small/"
 
@@ -24,8 +29,15 @@ transformCh00 = Transform(Input=channel0)
 transformCh00.Transform.Translate = [0.0, 0.0, 0.0]
 transformCh00.Transform.Rotate = [0.0, 0.0, 0.0]
 
+transformCh00s = Transform(Input=channel0s)
+transformCh00s.Transform.Translate = [0.0, 0.0, 0.0]
+transformCh00s.Transform.Rotate = [0.0, 0.0, 0.0]
+
 transformCh0 = Transform(Input=transformCh00)
 transformCh0.Transform.Rotate = [0.0, 0.0, 0.0]
+
+transformCh0s = Transform(Input=transformCh00s)
+transformCh0s.Transform.Rotate = [0.0, 0.0, 0.0]
 
 transformCh11 = Transform(Input=channel0)
 transformCh11.Transform.Translate = [0.0, 0.0, 0.0]
@@ -35,17 +47,32 @@ transformCh111.Transform.Rotate = [0.0, 0.0, 180.0]
 transformCh1 = Transform(Input=transformCh111)
 transformCh1.Transform.Rotate = [0.0, 0.0, 0.0]
 
+transformCh11s = Transform(Input=channel0s)
+transformCh11s.Transform.Translate = [0.0, 0.0, 0.0]
+transformCh111s = Transform(Input=transformCh11s)
+transformCh111s.Transform.Rotate = [0.0, 0.0, 180.0]
+
+transformCh1s = Transform(Input=transformCh111s)
+transformCh1s.Transform.Rotate = [0.0, 0.0, 0.0]
+
 steps = 239
 files0 = [data_base_path_big + f"intersections-reservoir_0-{i}.vtu" for i in range(steps)]
 files1 = [data_base_path_big + f"intersections-reservoir_1-{i}.vtu" for i in range(steps)]
 intersections0 = XMLUnstructuredGridReader(registrationName='intersections0', FileName=files0)
 intersections1 = XMLUnstructuredGridReader(registrationName='intersections1', FileName=files1)
 
+files0s = [data_base_path_small + f"intersections-reservoir_0-{i}.vtu" for i in range(steps)]
+files1s = [data_base_path_small + f"intersections-reservoir_1-{i}.vtu" for i in range(steps)]
+intersections0s = XMLUnstructuredGridReader(registrationName='intersections0s', FileName=files0s)
+intersections1s = XMLUnstructuredGridReader(registrationName='intersections1s', FileName=files1s)
+
 animationScene = GetAnimationScene()
 animationScene.UpdateAnimationUsingDataTimeSteps()
 
 intersections0.TimeArray = 'None'
 intersections1.TimeArray = 'None'
+intersections0s.TimeArray = 'None'
+intersections1s.TimeArray = 'None'
 
 # get active view
 renderView = GetActiveViewOrCreate('RenderView')
@@ -56,6 +83,12 @@ disp = GetDisplayProperties(transformCh0, view=renderView)
 disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
 disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 disp = GetDisplayProperties(transformCh1, view=renderView)
+disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+disp = GetDisplayProperties(transformCh0s, view=renderView)
+disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+disp = GetDisplayProperties(transformCh1s, view=renderView)
 disp.AmbientColor = [0.6666666666666666, 1.0, 1.0]
 disp.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 
@@ -81,11 +114,27 @@ dispWater = GetDisplayProperties(transformWater0, view=renderView)
 dispWater.AmbientColor = [0.6666666666666666, 1.0, 1.0]
 dispWater.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 
+transformWater0s = Transform(Input=intersections0s)
+transformWater0s.Transform.Rotate = [0.0, 0.0, 0.0]
+
+Show()
+dispWater = GetDisplayProperties(transformWater0s, view=renderView)
+dispWater.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+dispWater.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+
 transformWater1 = Transform(Input=intersections1)
 transformWater1.Transform.Rotate = [0.0, 0.0, 180.0]
 
 Show()
 dispWater = GetDisplayProperties(transformWater1, view=renderView)
+dispWater.AmbientColor = [0.6666666666666666, 1.0, 1.0]
+dispWater.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
+
+transformWater1s = Transform(Input=intersections1s)
+transformWater1s.Transform.Rotate = [0.0, 0.0, 180.0]
+
+Show()
+dispWater = GetDisplayProperties(transformWater1s, view=renderView)
 dispWater.AmbientColor = [0.6666666666666666, 1.0, 1.0]
 dispWater.DiffuseColor = [0.6666666666666666, 1.0, 1.0]
 
@@ -124,13 +173,17 @@ def update(i):
         g, b = float(g), float(b)
         transformCh0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transformCh1.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        transformCh0s.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        transformCh1s.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transform2.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
         transformWater0.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
+        transformWater0s.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 0.0]
 
     with open(data_base_path_big + f"intersections-reservoir_1-{i}.txt") as metaData:
         g, b = metaData.readlines()[0].split()[:2]
         g, b = float(g), float(b)
         transformWater1.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 180.0]
+        transformWater1s.Transform.Rotate = [-g/np.pi*180, b/np.pi*180, 180.0]
 
     renderView.Update()
 
@@ -144,7 +197,7 @@ animationScene.NumberOfFrames = len(files0)
 animationScene.GoToFirst()
 for i in range(1, len(files0)):
     update(i)
-    WriteImage(f"chip-anim-{i:04}.png")
+    WriteImage(f"chip-anim_both-{i:04}.png")
     #time.sleep(0.05)
     curTime = animationScene.TimeKeeper.Time
     i = int(curTime)
