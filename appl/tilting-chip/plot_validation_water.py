@@ -9,7 +9,9 @@ def running_mean(x, N):
     cumsum = np.cumsum(np.insert(x, 0, 0))
     return (cumsum[N:] - cumsum[:-N]) / float(N)
 
-all_data = np.genfromtxt("../../../data/flow_water/data_water_speed.csv", delimiter=",", dtype=np.float64)
+old = False
+data_filename = "../../../data/flow_water/data_water_speed.csv" if old else  "../../../data/flow_new/piv-26-09-22.csv"
+all_data = np.genfromtxt(data_filename, delimiter=",", dtype=np.float64)
 data = [
     all_data[:, [0, i]] for i in range(1, all_data.shape[1])
 ]
@@ -20,7 +22,8 @@ speed = [3, 4, 5, 6, 7, 8, 9, 10]
 varied_param_str = "speed"
 varied_param = speed
 
-for d, label in zip(data, varied_param):
+for d, labels in zip(data, varied_param):
+    label, index = labels
     t = d[:,0]
     f = d[:,1]
 
