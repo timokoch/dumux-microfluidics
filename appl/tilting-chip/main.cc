@@ -102,9 +102,9 @@ int main(int argc, char** argv)
         // compute current channel states (pressure, available volume, dry/wet)
         // for the first reservoir use the given angles
         // for the second reservoir we use minus the given angles (geometry mirrored at center of rotation (origin))
-        const auto reservoir0State = Dumux::Microfluidic::computeChannelStates(reservoir, { gamma, beta }, volumes[0], timeStepIndex, 0);
+        const auto reservoir0State = Dumux::Microfluidic::computeChannelStates(reservoir, { gamma, beta }, volumes[0], timeStepIndex, 0, writeOutput);
         const auto reservoir1State = [&]{
-            auto s = Dumux::Microfluidic::computeChannelStates(reservoir, { -gamma, -beta }, volumes[1], timeStepIndex, 1);
+            auto s = Dumux::Microfluidic::computeChannelStates(reservoir, { -gamma, -beta }, volumes[1], timeStepIndex, 1, writeOutput);
             std::swap(s.ch0, s.ch1); // mirrored channel states
             return s;
         }();

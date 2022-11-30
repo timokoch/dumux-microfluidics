@@ -69,7 +69,8 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
                           const std::array<double, 2>& angle,
                           double fluidVolume,
                           int timeStepIndex,
-                          int reservoirIdx)
+                          int reservoirIdx,
+                          bool writeOutput)
 {
     // compute the fluid body at the given rotation angles and current fluid volume
     const auto fluidBody = reservoir.computeFluidBody(angle, fluidVolume);
@@ -79,10 +80,11 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
     // std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
 
     // for visualization write out the fluid body geometry
-    //Dumux::writeIntersections<Point>(fluidBody.triangulation, outputName);
+    // using Point = Dune::FieldVector<double, 3>;
+    // if (writeOutput)
+    //     Dumux::writeIntersections<Point>(fluidBody.triangulation, outputName);
 
     // the reference points where the inlet/outlet quantities are to be measured
-    using Point = Dune::FieldVector<double, 3>;
     static const auto ref0 = Dumux::getParam<Point>("Problem.MeasurementPoint1");
     static const auto ref1 = Dumux::getParam<Point>("Problem.MeasurementPoint2");
 
@@ -116,6 +118,7 @@ auto computeChannelStates(const Microfluidic::Reservoir& reservoir,
     std::cout << "Total pressure:     " << p0 << ", " << p1 << " Pa" << std::endl;
     std::cout << "========================================================================" << std::endl;
 
+    // if (writeOutput)
     // {
     //     std::ofstream metaData(outputName + ".txt");
     //     metaData << Dumux::Fmt::format("{} {} {} {} {} {} {}\n", angle[0], angle[1], fluidVolume, p0, p1, dry0, dry1);
