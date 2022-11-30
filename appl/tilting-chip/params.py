@@ -124,6 +124,14 @@ DEFAULT_CASE_VALIDATION = {
     **DEFAULT_FLUX_LIMITER,
 }
 
+DEFAULT_CASE_VISUALIZATION_BIG = DEFAULT_CASE_VALIDATION
+DEFAULT_CASE_VISUALIZATION_SMALL = {
+    **SMALL_RESERVOIR_HIGH_ASPECT_CHANNEL,
+    **(TRANSMISSIBILITY_20_DEGREE["HIGH_ASPECT_RATIO_CHANNEL_SHORT"]),
+    **DEFAULT_KINETIC,
+    **DEFAULT_FLUX_LIMITER,
+}
+
 # WSS and Q calculations:
 # For that we use 37 degrees and both channels with low aspect ratio
 DEFAULT_CASE_WSS_BIG = {
@@ -141,9 +149,9 @@ DEFAULT_CASE_WSS_SMALL = {
 }
 
 
-def make_cmd(args, output_filename):
+def make_cmd(args, output_filename, prefix_path=None):
     """Create command with Dumux command line arguments"""
-    cmd = ["./flow_model",]
+    cmd = ["./flow_model",] if prefix_path is None else [f"{prefix_path}/flow_model",]
     for k, v in args.items():
         cmd += [f"-{k}", f"{v}",]
     cmd += ["-Problem.OutputFileName", output_filename,]
