@@ -25,6 +25,10 @@ def max_wss(speed, tilt):
             print(f"Parse {file_name}")
             if Path(file_name).is_file():
                 sim = np.genfromtxt(file_name, delimiter=" ", skip_header=1, skip_footer=2)
+                if t == 15 or t == 10:
+                    if s == 1 or s == 2:
+                        print(t, s)
+                        print(np.max(sim[:,6])*10, "dyne/cm2")
                 yield np.max(sim[:,6])*10 # Pa to dyne/cm^2
             else:
                 yield 0
@@ -74,7 +78,7 @@ else:
     ax.set_zlim(0, 8)
 ax.view_init(elev=20, azim=-142)
 cbar = fig.colorbar(surf, shrink=0.5, aspect=10)
-cbar.set_label(r"$V\,/\,\int \! Q \,dt$")
+cbar.set_label(r"$\int \! Q \,dt \,/\, V$")
 fig.tight_layout()
 plt.show()
 fig.savefig("wss_wireframe.pdf", dpi=600)
