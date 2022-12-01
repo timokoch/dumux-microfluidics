@@ -100,11 +100,12 @@ public:
             DUNE_THROW(ParameterException, "Last control point has to be (0.5, 0.5)");
 
         const auto plotTime = Dumux::linspace(0.0, 1.0/rotationsPerSeconds_, 100);
-        std::vector<Dune::FieldVector<double, 3>> output; output.reserve(100);
+        std::vector<Dune::FieldVector<double, 5>> output; output.reserve(100);
         for (int i = 0; i < 100; ++i)
         {
             const auto [a, b] = rotationAngles(plotTime[i]);
-            output.push_back(Dune::FieldVector<double, 3>{{ plotTime[i], a, b }});
+            const auto t = mapToUnitInterval_(plotTime[i]);
+            output.push_back(Dune::FieldVector<double, 5>{{ t, transform_(t), plotTime[i], a, b }});
         }
 
         writeContainerToFile(output, "angles.txt", 10);
@@ -114,21 +115,30 @@ public:
     std::pair<double, double> rotationAngles(double curTime) const override
     {
         // get value in [0, 1)
-        const auto t = curTime*rotationsPerSeconds_ - std::floor(curTime*rotationsPerSeconds_);
-        const auto offset = t > 0.5 ? 0.5 : 0.0;
+        const auto t = mapToUnitInterval_(curTime);
 
         // apply the a transformation of the parameter-space
         // (takes a number between 0 and 0.5 and spits out a number between 0 and 0.5)
         // tt is in [0, 1)
-        const auto tt = transform_(t-offset) + offset;
+        const auto tt = transform_(t);
 
         // convert to time and forward to the usual implementation
         return ConstantTiltMotionFunction::rotationAngles(tt/rotationsPerSeconds_);
     }
 
 private:
-    double transform_(const double t) const
+    double mapToUnitInterval_(double curTime) const
     {
+        return curTime*rotationsPerSeconds_ - std::floor(curTime*rotationsPerSeconds_);
+    }
+
+    double transform_(const double tOne) const
+    {
+        // we take a number between 0 and 0.5 because we want the
+        // sequence to be the same for half of time (left, right channel)
+        const auto offset = tOne > 0.5 ? 0.5 : 0.0;
+        const auto t = tOne - offset;
+
         if (t <= x_[0])
             return y_[0];
         if (t >= x_.back())
@@ -138,7 +148,10 @@ private:
         if (lookUpIndex < 1)
             DUNE_THROW(Dune::InvalidStateException, "Wrong interpolation in LinearInterpolationSpeedConstantTiltMotionFunction");
         const auto gamma = (t - x_[lookUpIndex-1])/(x_[lookUpIndex] - x_[lookUpIndex-1]); // gamma in [0, 1)
-        return y_[lookUpIndex-1] + gamma*(y_[lookUpIndex] - y_[lookUpIndex-1]);
+        const auto tt = y_[lookUpIndex-1] + gamma*(y_[lookUpIndex] - y_[lookUpIndex-1]);
+
+        // go back to [0, 1)
+        return tt + offset;
     }
 
     double rotationsPerSeconds_;
