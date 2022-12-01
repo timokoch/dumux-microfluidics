@@ -82,7 +82,7 @@ auto computeChannelStates(
     // std::string outputName = "intersections-reservoir_" + std::to_string(reservoirIdx) + '-' + std::to_string(timeStepIndex);
 
     // for visualization write out the fluid body geometry
-    // using Point = Dune::FieldVector<double, 3>;
+    using Point = Dune::FieldVector<double, 3>;
     // if (writeOutput)
     //     Dumux::writeIntersections<Point>(fluidBody.triangulation, outputName);
 
