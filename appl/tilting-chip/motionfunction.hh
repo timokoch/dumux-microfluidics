@@ -24,11 +24,15 @@
 #define DUMUX_MICROFLUIDIC_MOTION_FUNCTION_HH
 
 #include <cmath>
+#include <vector>
+#include <algorithm>
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/common/math.hh>
 #include <dumux/common/parameters.hh>
+#include <dumux/common/exceptions.hh>
+#include <dumux/io/container.hh>
 
 namespace Dumux::Microfluidic {
 
@@ -59,7 +63,7 @@ public:
     }
 
     // rotation angles (pitch, roll) at time curTime
-    std::pair<double, double> rotationAngles(double curTime) const final
+    std::pair<double, double> rotationAngles(double curTime) const override
     {
         const auto t = curTime*rotationsPerSeconds_*2.0*M_PI;
         const auto sinT = std::sin(t);
@@ -72,6 +76,73 @@ public:
 private:
     double tiltAngle_, sinTiltAngle_;
     double rotationsPerSeconds_;
+};
+
+/*!
+ * \brief Tilting function that models rotation with constant tilt but variable speed
+ */
+class LinearInterpolationSpeedConstantTiltMotionFunction : public ConstantTiltMotionFunction
+{
+public:
+    explicit LinearInterpolationSpeedConstantTiltMotionFunction(double rotationsPerSecond)
+    : ConstantTiltMotionFunction(rotationsPerSecond)
+    , rotationsPerSeconds_(rotationsPerSecond)
+    {
+        x_ = getParam<std::vector<double>>("Problem.MotionPointsX");
+        y_ = getParam<std::vector<double>>("Problem.MotionPointsY");
+        if (x_.size() != y_.size())
+            DUNE_THROW(ParameterException, "MotionPointsX size != MotionPointsY size");
+        std::sort(x_.begin(), x_.end());
+        std::sort(y_.begin(), y_.end());
+        if (x_[0] > 1e-20 || y_[0] > 1e-20)
+            DUNE_THROW(ParameterException, "First control point has to be (0, 0)");
+        if (x_.back() < 0.5 || y_.back() < 0.5)
+            DUNE_THROW(ParameterException, "Last control point has to be (0.5, 0.5)");
+
+        const auto plotTime = Dumux::linspace(0.0, 1.0/rotationsPerSeconds_, 100);
+        std::vector<Dune::FieldVector<double, 3>> output; output.reserve(100);
+        for (int i = 0; i < 100; ++i)
+        {
+            const auto [a, b] = rotationAngles(plotTime[i]);
+            output.push_back(Dune::FieldVector<double, 3>{{ plotTime[i], a, b }});
+        }
+
+        writeContainerToFile(output, "angles.txt", 10);
+    }
+
+    // rotation angles (pitch, roll) at time curTime
+    std::pair<double, double> rotationAngles(double curTime) const override
+    {
+        // get value in [0, 1)
+        const auto t = curTime*rotationsPerSeconds_ - std::floor(curTime*rotationsPerSeconds_);
+        const auto offset = t > 0.5 ? 0.5 : 0.0;
+
+        // apply the a transformation of the parameter-space
+        // (takes a number between 0 and 0.5 and spits out a number between 0 and 0.5)
+        // tt is in [0, 1)
+        const auto tt = transform_(t-offset) + offset;
+
+        // convert to time and forward to the usual implementation
+        return ConstantTiltMotionFunction::rotationAngles(tt/rotationsPerSeconds_);
+    }
+
+private:
+    double transform_(const double t) const
+    {
+        if (t <= x_[0])
+            return y_[0];
+        if (t >= x_.back())
+            return y_.back();
+
+        const auto lookUpIndex = std::distance(x_.begin(), std::lower_bound(x_.begin(), x_.end(), t));
+        if (lookUpIndex < 1)
+            DUNE_THROW(Dune::InvalidStateException, "Wrong interpolation in LinearInterpolationSpeedConstantTiltMotionFunction");
+        const auto gamma = (t - x_[lookUpIndex-1])/(x_[lookUpIndex] - x_[lookUpIndex-1]); // gamma in [0, 1)
+        return y_[lookUpIndex-1] + gamma*(y_[lookUpIndex] - y_[lookUpIndex-1]);
+    }
+
+    double rotationsPerSeconds_;
+    std::vector<double> x_, y_;
 };
 
 } // end namespace Dumux::Microfluidic
