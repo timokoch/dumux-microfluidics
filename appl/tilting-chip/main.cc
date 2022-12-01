@@ -83,7 +83,10 @@ int main(int argc, char** argv)
     // the motion function (using constant tilt here / can be replaced by something else in the future)
     const auto rotationsPerSecond = Dumux::getParam<double>("Problem.RotationsPerMinute", 4.0)/60.0;
     std::shared_ptr<Dumux::Microfluidic::MotionFunction> motionFunction
-        = std::make_unique<Dumux::Microfluidic::ConstantTiltMotionFunction>(rotationsPerSecond);
+        = std::make_shared<Dumux::Microfluidic::ConstantTiltMotionFunction>(rotationsPerSecond);
+
+    if (Dumux::hasParam("Problem.MotionPointsX"))
+        motionFunction = std::make_shared<Dumux::Microfluidic::LinearInterpolationSpeedConstantTiltMotionFunction>(rotationsPerSecond);
 
     // Read parameters and setup the time loop
     const auto cycles = Dumux::getParam<double>("TimeLoop.Cycles", 1.0);
