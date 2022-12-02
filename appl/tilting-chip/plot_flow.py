@@ -5,7 +5,7 @@ import sys
 # plotting script for debugging/visualizing a result
 filename = str(sys.argv[1])
 
-fig, (ax, ax3) = plt.subplots(2, 1, figsize=(8,8))
+fig, (ax, ax3) = plt.subplots(2, 1, figsize=(8,5))
 
 def plot(filename):
     data = np.genfromtxt(filename, skip_header=1).T
