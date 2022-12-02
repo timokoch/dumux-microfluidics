@@ -11,7 +11,7 @@ see PDF in docs
 def plot(aspect_ratio, channel_length, scale, img, mu=1e-3):
     L = 1.0
     H = L/aspect_ratio
-    G = 5000 #-dp/dz
+    G = 2500 #-dp/dz
 
     def dimless_velocity(y, z, num):
         h = 0.5*H
@@ -72,19 +72,25 @@ def plot(aspect_ratio, channel_length, scale, img, mu=1e-3):
         return dimless_flow_rate(num)*(LStar*HStar**3)/(12*mu*length)
 
 
+    print("\n" + "-"*50)
+    print(img, "aspect_ratio: ", aspect_ratio)
+    print("-"*50)
     print("Channel volume (µl): ", H*L*scale**2*channel_length*1e9)
     print("Channel H (mm): ", H*scale*1e3)
     print("Channel W (mm): ", L*scale*1e3)
     print("Channel L (mm): ", channel_length*1e3)
-    print("Pressure gradient: ", G)
+    Dhy = 2*H*L/(H + L) # 4A/P
+    print("Channel D_hy (mm): ", Dhy*scale*1e3)
+    print("Pressure gradient (Pa/m): ", G)
     Q = flow_rate(10)
-    print("Flow rate: ", Q)
-    print("Transmissibility: ", transmissibility(10, length=channel_length))
-    print("Transmissibility: ", transmissibility(10, length=channel_length)*channel_length)
+    print("Flow rate (m^3/s): ", Q)
+    print("Reynolds number (ϱQd_hy/(Aµ)): ", Q*1000*Dhy*scale/(H*scale*L*scale*mu))
+    print("Transmissibility (m^3/(Pa s)): ", transmissibility(10, length=channel_length))
+    print("Transmissibility*L: (m^4/(Pa s))", transmissibility(10, length=channel_length)*channel_length)
 
-    print("Max. velocity: ", velocity(0.5*L, 0.5*H, num=10))
-    print("Max. Wall shear stress: ", wall_shear_stress(0, 0.5*H, num=10))
-    print(f"WSS/Q: {wall_shear_stress(0, 0.5*H, num=10)/Q:.8e}")
+    print("Max. velocity (m/s): ", velocity(0.5*L, 0.5*H, num=10))
+    print("Max. Wall shear stress (Pa): ", wall_shear_stress(0, 0.5*H, num=10))
+    print(f"WSS/Q (Pa s)/m^3: {wall_shear_stress(0, 0.5*H, num=10)/Q:.8e}")
 
     Q = G*L*H**3/(12.0*mu)*(1.0 - 0.630*H/L)
     print("Flow rate (approx H<<L): ", Q)
@@ -113,25 +119,34 @@ def plot(aspect_ratio, channel_length, scale, img, mu=1e-3):
 
 c1H = 0.5e-3
 c1L = 3.2e-3
+
 c2H = 0.8e-3
 c2L = 1.2e-3
 
+c3H = 0.4e-3
+c3L = 0.4e-3
+
 channel1_length_long = 16.4e-3 # big reservoir channel
-channel1_length_short = 9.8e-3 # big reservoir channel
-#channel_length = 9.8e-3 # small reservoir channel
+channel1_length_short = 9.8e-3 # small reservoir channel
 
+# viscosity = 1e-3
 # short channels
-plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_short, scale=c1L, img="channel1", mu=1e-3)
-plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_short, scale=c2L, img="channel2", mu=1e-3)
+plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_short, scale=c1L, img="channel1_short_mu1", mu=1e-3)
+plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_short, scale=c2L, img="channel2_short_mu1", mu=1e-3)
+plot(aspect_ratio=c3L/c3H, channel_length=channel1_length_short, scale=c3L, img="channel3_short_mu1", mu=1e-3)
 
 # long channels
-plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_long, scale=c1L, img="channel1", mu=1e-3)
-plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_long, scale=c2L, img="channel2", mu=1e-3)
+plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_long, scale=c1L, img="channel1_long_mu1", mu=1e-3)
+plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_long, scale=c2L, img="channel2_long_mu1", mu=1e-3)
+plot(aspect_ratio=c3L/c3H, channel_length=channel1_length_long, scale=c3L, img="channel3_long_mu1", mu=1e-3)
 
+# viscosity = 0.8e-3
 # short channels
-plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_short, scale=c1L, img="channel1", mu=0.8e-3)
-plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_short, scale=c2L, img="channel2", mu=0.8e-3)
+plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_short, scale=c1L, img="channel1_short_mu0.8", mu=0.8e-3)
+plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_short, scale=c2L, img="channel2_short_mu0.8", mu=0.8e-3)
+plot(aspect_ratio=c3L/c3H, channel_length=channel1_length_short, scale=c3L, img="channel3_short_mu0.8", mu=0.8e-3)
 
 # long channels
-plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_long, scale=c1L, img="channel1", mu=0.8e-3)
-plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_long, scale=c2L, img="channel2", mu=0.8e-3)
+plot(aspect_ratio=c1L/c1H, channel_length=channel1_length_long, scale=c1L, img="channel1_long_mu0.8", mu=0.8e-3)
+plot(aspect_ratio=c2L/c2H, channel_length=channel1_length_long, scale=c2L, img="channel2_long_mu0.8", mu=0.8e-3)
+plot(aspect_ratio=c3L/c3H, channel_length=channel1_length_long, scale=c3L, img="channel3_long_mu0.8", mu=0.8e-3)

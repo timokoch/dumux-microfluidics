@@ -45,6 +45,21 @@ LOW_ASPECT_RATIO_CHANNEL_SHORT = {
     "Problem.ChannelAreaInSquareMeter": str(1.2*0.8e-6),
 }
 
+# smaller channels for low Reynolds numbers
+NARROW_CHANNEL_LONG = {
+    "Problem.DryingThresholdInMilliMeter": "0.5",
+    "Problem.SingleChannelVolumeInMicroLiter": "2.624",
+    "Problem.ChannelLengthInMeter": "16.4e-3",
+    "Problem.ChannelAreaInSquareMeter": str(0.4*0.4e-6),
+}
+
+NARROW_CHANNEL_SHORT = {
+    "Problem.DryingThresholdInMilliMeter": "0.5",
+    "Problem.SingleChannelVolumeInMicroLiter": "1.568",
+    "Problem.ChannelLengthInMeter": "9.8e-3",
+    "Problem.ChannelAreaInSquareMeter": str(0.4*0.4e-6),
+}
+
 BIG_RESERVOIR_HIGH_ASPECT_CHANNEL = {
     **BIG_RESERVOIR,
     **HIGH_ASPECT_RATIO_CHANNEL_LONG,
@@ -55,6 +70,11 @@ BIG_RESERVOIR_LOW_ASPECT_CHANNEL = {
     **LOW_ASPECT_RATIO_CHANNEL_LONG,
 }
 
+BIG_RESERVOIR_NARROW_CHANNEL = {
+    **BIG_RESERVOIR,
+    **NARROW_CHANNEL_LONG,
+}
+
 SMALL_RESERVOIR_HIGH_ASPECT_CHANNEL = {
     **SMALL_RESERVOIR,
     **HIGH_ASPECT_RATIO_CHANNEL_SHORT,
@@ -63,6 +83,11 @@ SMALL_RESERVOIR_HIGH_ASPECT_CHANNEL = {
 SMALL_RESERVOIR_LOW_ASPECT_CHANNEL = {
     **SMALL_RESERVOIR,
     **LOW_ASPECT_RATIO_CHANNEL_SHORT,
+}
+
+SMALL_RESERVOIR_NARROW_CHANNEL = {
+    **SMALL_RESERVOIR,
+    **NARROW_CHANNEL_SHORT,
 }
 
 TRANSMISSIBILITY_20_DEGREE = {
@@ -82,6 +107,14 @@ TRANSMISSIBILITY_20_DEGREE = {
         "Problem.ChannelTransmissibility": "1.8334e-9",
         "Problem.ChannelWSSFactor": "9.67e+06", # WSS/Q
     },
+    "NARROW_CHANNEL_SHORT": {
+        "Problem.ChannelTransmissibility": "9.18055e-11",
+        "Problem.ChannelWSSFactor": "1.49897e+08", # WSS/Q
+    },
+    "NARROW_CHANNEL_LONG": {
+        "Problem.ChannelTransmissibility": "5.48594e-11",
+        "Problem.ChannelWSSFactor": "1.49897e+08", # WSS/Q
+    },
 }
 
 TRANSMISSIBILITY_37_DEGREE = {
@@ -100,6 +133,14 @@ TRANSMISSIBILITY_37_DEGREE = {
     "LOW_ASPECT_RATIO_CHANNEL_LONG": {
         "Problem.ChannelTransmissibility": "2.2918e-9",
         "Problem.ChannelWSSFactor": "7.74e+6", # WSS/Q
+    },
+    "NARROW_CHANNEL_SHORT": {
+        "Problem.ChannelTransmissibility": "1.14757e-10",
+        "Problem.ChannelWSSFactor": "1.1992e+08", # WSS/Q
+    },
+    "NARROW_CHANNEL_LONG": {
+        "Problem.ChannelTransmissibility": "6.85742e-11",
+        "Problem.ChannelWSSFactor": "1.1992e+08", # WSS/Q
     },
 }
 
@@ -148,6 +189,20 @@ DEFAULT_CASE_WSS_SMALL = {
     **DEFAULT_FLUX_LIMITER,
 }
 
+# low Reynold number cases:
+DEFAULT_CASE_LOWRE_BIG = {
+    **BIG_RESERVOIR_NARROW_CHANNEL,
+    **(TRANSMISSIBILITY_37_DEGREE["NARROW_CHANNEL_LONG"]),
+    **DEFAULT_KINETIC,
+    **DEFAULT_FLUX_LIMITER,
+}
+
+DEFAULT_CASE_LOWRE_SMALL = {
+    **SMALL_RESERVOIR_NARROW_CHANNEL,
+    **(TRANSMISSIBILITY_37_DEGREE["NARROW_CHANNEL_SHORT"]),
+    **DEFAULT_KINETIC,
+    **DEFAULT_FLUX_LIMITER,
+}
 
 def make_cmd(args, output_filename, prefix_path=None):
     """Create command with Dumux command line arguments"""
