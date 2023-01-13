@@ -1,0 +1,37 @@
+[Grid]
+File = membrane.msh
+Verbosity = 1
+DomainMarkers = true # read domain markers (gmsh physical entities)
+BoundarySegments = true # read boundary markers (gmsh physical entities)
+
+[Problem]
+Name = test_channel
+DeltaP = 100
+EnableGravity = false
+EnableInertiaTerms = true
+
+[FreeFlow]
+EnableUnsymmetrizedVelocityGradient = true
+
+[Component]
+LiquidDensity = 1000
+LiquidDynamicViscosity = 1e-3
+
+[Mass.Assembly.NumericDifference]
+PriVarMagnitude = 1.0
+BaseEpsilon = 0.1
+
+[Momentum.Assembly.NumericDifference]
+PriVarMagnitude = 1.0 1.0 1.0
+BaseEpsilon = 0.1
+
+[LinearSolver]
+Verbosity = 2
+SymmetrizeDirichlet = true
+DirectSolverForVelocity = false
+UseDirectSolver = true
+
+[Newton]
+MinSteps = 1
+EnableAbsoluteResidualCriterion = true
+MaxAbsoluteResidual = 1e-15
